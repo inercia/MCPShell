@@ -103,11 +103,12 @@ Runs an MCP server that communicates using the Model Context Protocol and expose
 
 - `--http`: Enable HTTP server mode (serve MCP over HTTP/SSE instead of stdio)
 - `--port`: Port for HTTP server (default: 8080, only used with --http)
+- `--daemon`: Run in daemon mode (background process, ignores SIGHUP, only works with --http)
 
 **Example**:
 
 ```console
-mcpshell mcp --tools=examples/config.yaml --log-level=debug
+mcpshell mcp --tools=examples/config.yaml --http --port=9090 --daemon --log-level=debug
 ```
 
 ### EXE Command
