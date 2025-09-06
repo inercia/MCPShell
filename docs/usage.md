@@ -163,6 +163,8 @@ MCPShell can be integrated with various IDEs and tools:
 - [Agent Usage Guide](usage-agent.md): Detailed guide for using MCPShell's agent functionality 
 - [VSCode Integration](usage-vscode.md): Guide for integrating MCPShell with Visual Studio Code
 - [Cursor Integration](usage-cursor.md): Guide for integrating MCPShell with Cursor editor
+- [Codex CLI Integration](usage-codex-cli.md): Guide for integrating MCPShell with the Codex CLI
+- [Claud Desktop Integration](usage-claude-desktop.md): Guide for integrating MCPShell with Claude Desktop
 
 ## Configuration
 
