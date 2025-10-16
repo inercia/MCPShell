@@ -7,7 +7,7 @@ toolchain go1.24.3
 require (
 	github.com/Masterminds/sprig/v3 v3.3.0
 	github.com/fatih/color v1.18.0
-	github.com/google/cel-go v0.25.0
+	github.com/google/cel-go v0.26.1
 	github.com/mark3labs/mcp-go v0.26.0
 	github.com/sashabaranov/go-openai v1.40.0
 	github.com/spf13/cobra v1.10.1
@@ -15,7 +15,7 @@ require (
 )
 
 require (
-	cel.dev/expr v0.23.1 // indirect
+	cel.dev/expr v0.24.0 // indirect
 	dario.cat/mergo v1.0.1 // indirect
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver/v3 v3.3.0 // indirect
