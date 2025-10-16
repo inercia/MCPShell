@@ -9,7 +9,7 @@ require (
 	github.com/fatih/color v1.18.0
 	github.com/google/cel-go v0.26.1
 	github.com/mark3labs/mcp-go v0.26.0
-	github.com/sashabaranov/go-openai v1.40.0
+	github.com/sashabaranov/go-openai v1.41.2
 	github.com/spf13/cobra v1.10.1
 	gopkg.in/yaml.v3 v3.0.1
 )
