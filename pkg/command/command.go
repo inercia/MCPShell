@@ -134,14 +134,26 @@ func NewCommandHandler(tool config.Tool, params map[string]common.ParamConfig, s
 //   - A function that handles MCP tool calls
 func (h *CommandHandler) GetMCPHandler() func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		// Assert Arguments to a map
+		var args map[string]interface{}
+		if request.Params.Arguments != nil {
+			var ok bool
+			args, ok = request.Params.Arguments.(map[string]interface{})
+			if !ok {
+				return mcp.NewToolResultError(fmt.Sprintf("invalid arguments: expected a map, got %T", request.Params.Arguments)), nil
+			}
+		}
+
 		// Extract runner options if present
 		var runnerOpts map[string]interface{}
-		if opts, ok := request.Params.Arguments["options"].(map[string]interface{}); ok {
-			runnerOpts = opts
+		if args != nil {
+			if opts, ok := args["options"].(map[string]interface{}); ok {
+				runnerOpts = opts
+			}
 		}
 
 		// Execute the command using the common implementation
-		output, _, err := h.executeToolCommand(ctx, request.Params.Arguments, runnerOpts)
+		output, _, err := h.executeToolCommand(ctx, args, runnerOpts)
 		if err != nil {
 			return mcp.NewToolResultError(err.Error()), nil
 		}
