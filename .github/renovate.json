@@ -1,67 +1,67 @@
 {
-    "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-    "extends": [
-      ":dependencyDashboard",
-      ":separateMajorReleases",
-      ":combinePatchMinorReleases",
-      ":ignoreUnstable",
-      ":prImmediately",
-      ":semanticPrefixFixDepsChoreOthers",
-      ":updateNotScheduled",
-      ":automergeDisabled",
-      ":ignoreModulesAndTests",
-      "group:monorepos",
-      "group:recommended",
-      "helpers:disableTypesNodeMajor",
-      ":prHourlyLimitNone",
-      "docker:enableMajor"
-    ],
-    "rebaseWhen": "behind-base-branch",
-    "branchPrefix": "renovate-",
-    "schedule": "after 02:00 am and before 6:00 am every weekday",
-    "packageRules": [
-      {
-        "depTypeList": [
-          "devDependencies"
-        ],
-        "updateTypes": [
-          "minor",
-          "patch",
-          "pin"
-        ],
-        "automerge": true,
-        "labels": [
-          "automerge",
-          "devDependency"
-        ]
-      },
-      {
-        "depTypeList": [
-          "dependencies"
-        ],
-        "updateTypes": [
-          "patch",
-          "pin"
-        ],
-        "automerge": true,
-        "labels": [
-          "automerge",
-          "dependency"
-        ]
-      },
-      {
-        "updateTypes": [
-          "minor",
-          "patch",
-          "pin"
-        ],
-        "automerge": true
-      }
-    ],
-    "pinDigests": false,
-    "ignorePaths": [
-      "tests/**",
-      "examples/**"
-    ],
-    "prConcurrentLimit": 6
-  }
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    ":dependencyDashboard",
+    ":separateMajorReleases",
+    ":combinePatchMinorReleases",
+    ":ignoreUnstable",
+    ":prImmediately",
+    ":semanticPrefixFixDepsChoreOthers",
+    ":updateNotScheduled",
+    ":automergeDisabled",
+    ":ignoreModulesAndTests",
+    "group:monorepos",
+    "group:recommended",
+    "helpers:disableTypesNodeMajor",
+    ":prHourlyLimitNone",
+    "docker:enableMajor"
+  ],
+  "rebaseWhen": "behind-base-branch",
+  "branchPrefix": "renovate-",
+  "schedule": "after 02:00 am and before 6:00 am every weekday",
+  "packageRules": [
+    {
+      "matchDepTypes": [
+        "devDependencies"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "pin"
+      ],
+      "automerge": true,
+      "labels": [
+        "automerge",
+        "devDependency"
+      ]
+    },
+    {
+      "matchDepTypes": [
+        "dependencies"
+      ],
+      "matchUpdateTypes": [
+        "patch",
+        "pin"
+      ],
+      "automerge": true,
+      "labels": [
+        "automerge",
+        "dependency"
+      ]
+    },
+    {
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "pin"
+      ],
+      "automerge": true
+    }
+  ],
+  "pinDigests": false,
+  "ignorePaths": [
+    "tests/**",
+    "examples/**"
+  ],
+  "prConcurrentLimit": 6
+}
