@@ -57,13 +57,8 @@ lint: lint-golangci
 # Run golangci-lint (comprehensive linting)
 lint-golangci:
 	@echo ">>> Running golangci-lint..."
-	@if command -v golangci-lint >/dev/null 2>&1; then \
-		golangci-lint run; \
-	else \
-		echo "golangci-lint not found. Installing..."; \
-		go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest; \
-		golangci-lint run; \
-	fi
+	@cd tools && go install github.com/golangci/golangci-lint/cmd/golangci-lint
+	@$(shell go env GOPATH)/bin/golangci-lint run
 	@echo ">>> ... golangci-lint completed successfully"
 
 # Legacy linting - deprecated but kept for backward compatibility
