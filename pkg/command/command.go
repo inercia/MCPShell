@@ -84,7 +84,7 @@ func NewCommandHandler(tool config.Tool, params map[string]common.ParamConfig, s
 	if len(tool.Config.Constraints) > 0 {
 		logger.Info("Compiling %d constraints for tool '%s'", len(tool.Config.Constraints), tool.MCPTool.Name)
 
-		compiled, err = common.NewCompiledConstraints(tool.Config.Constraints, params, logger.Logger)
+		compiled, err = common.NewCompiledConstraints(tool.Config.Constraints, params, logger)
 		if err != nil {
 			logger.Error("Failed to compile constraints for tool %s: %v", tool.MCPTool.Name, err)
 			return nil, fmt.Errorf("constraint compilation error: %w", err)

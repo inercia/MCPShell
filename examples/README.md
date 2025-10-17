@@ -28,7 +28,6 @@ For the Kubernetes example, you can aks questions about your current cluster, po
   <img src="chat-example-2.png" alt="chat example" width="600"/>
 </p>
 
-
 Some other examples are just for demonstrating the configuration file format and paramters
 (like all the `config*yaml`).
 

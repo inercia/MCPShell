@@ -5,16 +5,17 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"github.com/inercia/MCPShell/pkg/common"
 )
 
 // RunnerExec implements the Runner interface
 type RunnerExec struct {
-	logger  *log.Logger
+	logger  *common.Logger
 	options RunnerExecOptions
 }
 
@@ -38,9 +39,9 @@ func NewRunnerExecOptions(options RunnerOptions) (RunnerExecOptions, error) {
 
 // NewRunnerExec creates a new ExecRunner with the provided logger
 // If logger is nil, a default logger is created
-func NewRunnerExec(options RunnerOptions, logger *log.Logger) (*RunnerExec, error) {
+func NewRunnerExec(options RunnerOptions, logger *common.Logger) (*RunnerExec, error) {
 	if logger == nil {
-		logger = log.New(os.Stderr, "runner-exec: ", log.LstdFlags)
+		logger = common.GetLogger()
 	}
 
 	execOptions, err := NewRunnerExecOptions(options)
@@ -74,7 +75,7 @@ func (r *RunnerExec) Run(ctx context.Context, shell string,
 
 	if isSingleExecutableCommand(command) {
 		r.logger.Printf("Optimization: running single executable command directly: %s", command)
-		execCmd = exec.Command(command)
+		execCmd = exec.CommandContext(ctx, command)
 		if len(env) > 0 {
 			r.logger.Printf("Adding %d environment variables to command", len(env))
 			for _, e := range env {
@@ -116,7 +117,7 @@ func (r *RunnerExec) Run(ctx context.Context, shell string,
 		r.logger.Printf("Using shell: %s", configShell)
 
 		// Create the command to execute the script file
-		execCmd = exec.Command(configShell, tmpFile)
+		execCmd = exec.CommandContext(ctx, configShell, tmpFile)
 		r.logger.Printf("Created command: %s %s", configShell, tmpFile)
 	} else {
 		// Execute the command directly without a temporary file
@@ -124,7 +125,7 @@ func (r *RunnerExec) Run(ctx context.Context, shell string,
 		r.logger.Printf("Using shell: %s", configShell)
 
 		// Simple command without arguments
-		execCmd = exec.Command(configShell, "-c", command)
+		execCmd = exec.CommandContext(ctx, configShell, "-c", command)
 		r.logger.Printf("Created command: %s -c %s", configShell, command)
 	}
 

@@ -8,7 +8,7 @@ None.
 
 ## Basic Structure
 
-The configuration file for **Claude Desktop** is typically located in ~/.config/Claude as **claude_desktop_config.json**.  Below are the basic elements required in the file:
+The configuration file for **Claude Desktop** is typically located in ~/.config/Claude as **claude_desktop_config.json**. Below are the basic elements required in the file:
 
 ```
 {
@@ -21,4 +21,3 @@ The configuration file for **Claude Desktop** is typically located in ~/.config/
 }
 
 ```
-

@@ -99,10 +99,10 @@ By using the MCPShell, you acknowledge and accept all risks associated with allo
 It is your responsibility to:
 
 1. Understand the security implications of each command you allow
-2. Implement appropriate constraints and validations
-3. Monitor system activity and respond to suspicious behavior
-4. Maintain regular backups of important data
-5. Deploy in a manner consistent with your own security requirements
+1. Implement appropriate constraints and validations
+1. Monitor system activity and respond to suspicious behavior
+1. Maintain regular backups of important data
+1. Deploy in a manner consistent with your own security requirements
 
 **If you cannot accept these risks, do not use the MCPShell for command execution.**
 

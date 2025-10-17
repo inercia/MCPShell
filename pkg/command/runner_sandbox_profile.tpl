@@ -36,4 +36,16 @@
 (allow file-read* (subpath "{{ . }}"))
 {{ end }}
 
+{{ range .AllowReadFiles }}
+(allow file-read* (literal "{{ . }}"))
+{{ end }}
+
+{{ range .AllowWriteFolders }}
+(allow file-write* (subpath "{{ . }}"))
+{{ end }}
+
+{{ range .AllowWriteFiles }}
+(allow file-write* (literal "{{ . }}"))
+{{ end }}
+
 {{ end }}

@@ -35,7 +35,7 @@ mcp:
 Cursor supports two configuration locations:
 
 1. **Project-specific**: Create a `.cursor/mcp.json` file in your project directory
-2. **Global**: Create a `~/.cursor/mcp.json` file in your home directory
+1. **Global**: Create a `~/.cursor/mcp.json` file in your home directory
 
 The MCPShell uses the "stdio" transport type, which runs locally on your machine.
 
@@ -136,8 +136,8 @@ You can provide authentication credentials and other sensitive information using
 When you chat with Cursor, the AI will:
 
 1. **Automatically detect** when a tool might be useful based on your request
-2. **Ask for approval** before running any tool (by default)
-3. **Display the results** in the chat conversation
+1. **Ask for approval** before running any tool (by default)
+1. **Display the results** in the chat conversation
 
 You can prompt Cursor to use specific tools by mentioning them by name or description in your request.
 

@@ -25,9 +25,13 @@ func GetDescription(cfg Config) (string, error) {
 		loadedCfg, loadErr := config.NewConfigFromFile(cfg.ConfigFile)
 		if loadErr == nil && loadedCfg.MCP.Description != "" {
 			configDesc = loadedCfg.MCP.Description
-			cfg.Logger.Debug("Found description in config file: %s", configDesc)
+			if cfg.Logger != nil {
+				cfg.Logger.Debug("Found description in config file: %s", configDesc)
+			}
 			finalDesc = configDesc
-			cfg.Logger.Debug("Using description from config file: %s", configDesc)
+			if cfg.Logger != nil {
+				cfg.Logger.Debug("Using description from config file: %s", configDesc)
+			}
 		}
 	}
 
@@ -36,16 +40,22 @@ func GetDescription(cfg Config) (string, error) {
 		cmdDesc := strings.Join(cfg.Descriptions, "\n")
 		if finalDesc != "" && !cfg.DescriptionOverride {
 			finalDesc += "\n" + cmdDesc
-			cfg.Logger.Info("Appending descriptions from command line flags")
+			if cfg.Logger != nil {
+				cfg.Logger.Info("Appending descriptions from command line flags")
+			}
 		} else {
 			finalDesc = cmdDesc
-			cfg.Logger.Info("Using descriptions from command line flags")
+			if cfg.Logger != nil {
+				cfg.Logger.Info("Using descriptions from command line flags")
+			}
 		}
 	}
 
 	// Add descriptions from files - handle both local files and URLs
 	if len(cfg.DescriptionFiles) > 0 {
-		cfg.Logger.Info("Reading server description from files/URLs: %v", cfg.DescriptionFiles)
+		if cfg.Logger != nil {
+			cfg.Logger.Info("Reading server description from files/URLs: %v", cfg.DescriptionFiles)
+		}
 		var fileDescs []string
 
 		for _, fileOrURL := range cfg.DescriptionFiles {
@@ -55,18 +65,26 @@ func GetDescription(cfg Config) (string, error) {
 			// Check if it's a URL
 			if strings.HasPrefix(fileOrURL, "http://") || strings.HasPrefix(fileOrURL, "https://") {
 				// It's a URL, download the content
-				cfg.Logger.Info("Downloading description from URL: %s", fileOrURL)
+				if cfg.Logger != nil {
+					cfg.Logger.Info("Downloading description from URL: %s", fileOrURL)
+				}
 				content, err = common.FetchURLText(fileOrURL)
 				if err != nil {
-					cfg.Logger.Error("Failed to download content from URL: %s - %v", fileOrURL, err)
+					if cfg.Logger != nil {
+						cfg.Logger.Error("Failed to download content from URL: %s - %v", fileOrURL, err)
+					}
 					return "", fmt.Errorf("failed to download content from URL %s: %w", fileOrURL, err)
 				}
 			} else {
 				// It's a local file, read it directly
-				cfg.Logger.Info("Reading description from file: %s", fileOrURL)
+				if cfg.Logger != nil {
+					cfg.Logger.Info("Reading description from file: %s", fileOrURL)
+				}
 				content, err = os.ReadFile(fileOrURL)
 				if err != nil {
-					cfg.Logger.Error("Failed to read description file: %s - %v", fileOrURL, err)
+					if cfg.Logger != nil {
+						cfg.Logger.Error("Failed to read description file: %s - %v", fileOrURL, err)
+					}
 					return "", fmt.Errorf("failed to read description file %s: %w", fileOrURL, err)
 				}
 			}
@@ -79,10 +97,14 @@ func GetDescription(cfg Config) (string, error) {
 			fileContent := strings.Join(fileDescs, "\n")
 			if finalDesc != "" && !cfg.DescriptionOverride {
 				finalDesc += "\n" + fileContent
-				cfg.Logger.Info("Appending descriptions from files")
+				if cfg.Logger != nil {
+					cfg.Logger.Info("Appending descriptions from files")
+				}
 			} else {
 				finalDesc = fileContent
-				cfg.Logger.Info("Using descriptions from files")
+				if cfg.Logger != nil {
+					cfg.Logger.Info("Using descriptions from files")
+				}
 			}
 		}
 	}

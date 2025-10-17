@@ -116,7 +116,7 @@ CEL supports three basic parameter types in MCPShell:
      - "text.matches('^[a-zA-Z0-9 ,.!?]*$')"    # Only allow alphanumeric and basic punctuation
    ```
 
-2. **Numeric operations**:
+1. **Numeric operations**:
 
    - Comparison operators: `==`, `!=`, `<`, `<=`, `>`, `>=`
    - Arithmetic operators: `+`, `-`, `*`, `/`, `%`
@@ -128,7 +128,8 @@ CEL supports three basic parameter types in MCPShell:
      - "count % 2 == 0"             # Ensure even numbers only
    ```
 
-3. **Boolean operations**:
+1. **Boolean operations**:
+
    - Logical operators: `&&` (and), `||` (or), `!` (not)
 
    ```yaml
@@ -151,7 +152,8 @@ CEL supports three basic parameter types in MCPShell:
      - "['.jpg', '.png', '.gif'].exists(ext, filename.endsWith(ext))"  # Only allow certain file extensions
    ```
 
-2. **Combining multiple constraints**:
+1. **Combining multiple constraints**:
+
    - Multiple constraints are implicitly AND-ed together
    - Use `||` inside a single constraint expression for OR logic
 
@@ -173,7 +175,7 @@ CEL supports three basic parameter types in MCPShell:
      - "!text.matches('.*[;&|`$].*')"           # Block shell special characters
    ```
 
-2. **Filesystem safety constraints**:
+1. **Filesystem safety constraints**:
 
    ```yaml
    constraints:
@@ -182,14 +184,14 @@ CEL supports three basic parameter types in MCPShell:
      - "path.matches('^[a-zA-Z0-9_\\-./]+$')"   # Only allow safe path characters
    ```
 
-3. **Command whitelisting**:
+1. **Command whitelisting**:
 
    ```yaml
    constraints:
      - "['ls', 'ps', 'echo', 'cat', 'grep'].exists(c, c == command)"  # Allow only specific commands
    ```
 
-4. **Input validation constraints**:
+1. **Input validation constraints**:
 
    ```yaml
    constraints:
@@ -300,4 +302,4 @@ For more advanced template features, refer to the [Go text/template documentatio
 
 In addition to the standard functions available in the Golang templating library,
 [these functions](https://github.com/Masterminds/sprig/blob/master/docs/index.md)
-are also available. 
+are also available.

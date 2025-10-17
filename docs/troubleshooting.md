@@ -53,22 +53,22 @@ This target validates all YAML files in the examples directory and stops on the 
    ```yaml
    # Incorrect:
    - "path.matches('^[a-zA-Z0-9/._\-]+$')"   
-   
+
    # Correct:
    - "path.matches('^[a-zA-Z0-9/._\\\\-]+$')"
    ```
 
-2. **Type Mismatches**: Ensure consistent numeric types in constraints:
+1. **Type Mismatches**: Ensure consistent numeric types in constraints:
 
    ```yaml
    # Error - mixing int and double:
    - "depth == 0 || (depth >= 1 && depth <= 3)"
-   
+
    # Correct - consistent double values:
    - "depth == 0.0 || (depth >= 1.0 && depth <= 3.0)"
    ```
 
-3. **Syntax Errors**: Check for missing quotes, incorrect indentation, or invalid YAML syntax.
+1. **Syntax Errors**: Check for missing quotes, incorrect indentation, or invalid YAML syntax.
 
 ## Direct Tool Execution
 
@@ -80,7 +80,7 @@ mcpshell exe --tools /path/to/config.yaml "tool_name" "param1=value1" "param2=va
 ```
 
 This executes a specific tool directly from the command line without starting the server. It follows the
-same process of constraint evaluation, parameter validation, and command execution that the server would perform. 
+same process of constraint evaluation, parameter validation, and command execution that the server would perform.
 
 Use this command to:
 
@@ -109,7 +109,7 @@ Once you are sure your config file is correct, you can try using the MCPShell in
    mcpshell --logfile debug.log
    ```
 
-2. **Inspect log output**: Review the generated log file for error messages,
+1. **Inspect log output**: Review the generated log file for error messages,
    API responses, and adapter behavior:
 
    ```console
@@ -159,7 +159,7 @@ Common configuration issues:
 If you encounter other issues, try the following steps:
 
 1. Make sure you're using the latest version of MCPShell
-2. Check the logs for any error messages
-3. Verify your configuration files for syntax errors
-4. Visit the [GitHub repository](https://github.com/inercia/MCPShell) for
+1. Check the logs for any error messages
+1. Verify your configuration files for syntax errors
+1. Visit the [GitHub repository](https://github.com/inercia/MCPShell) for
    known issues and solutions.

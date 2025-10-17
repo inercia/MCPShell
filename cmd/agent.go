@@ -36,13 +36,20 @@ func buildAgentConfig() (agent.AgentConfig, error) {
 		modelConfig = *defaultModel
 	}
 
+	logger := common.GetLogger()
+
 	// Override with command-line flags if provided
 	if agentModel != "" {
+		logger.Debug("Looking for model '%s' in agent config", agentModel)
+
 		// Check if the specified model exists in config
 		if configModel := config.GetModelByName(agentModel); configModel != nil {
 			modelConfig = *configModel
+			logger.Info("Found model '%s' in config: model=%s, class=%s, name=%s",
+				agentModel, configModel.Model, configModel.Class, configModel.Name)
 		} else {
 			// Use command-line model name if not found in config
+			logger.Info("Model '%s' not found in config, using as direct model name", agentModel)
 			modelConfig.Model = agentModel
 		}
 	}
@@ -73,14 +80,20 @@ func buildAgentConfig() (agent.AgentConfig, error) {
 	}
 
 	// Handle environment variable substitution for API key
-	switch modelConfig.APIKey {
-	case "${OPENAI_API_KEY}":
-		// Handle environment variable substitution
-		modelConfig.APIKey = os.Getenv("OPENAI_API_KEY")
+	if strings.HasPrefix(modelConfig.APIKey, "${") && strings.HasSuffix(modelConfig.APIKey, "}") {
+		envVar := strings.TrimSuffix(strings.TrimPrefix(modelConfig.APIKey, "${"), "}")
+		modelConfig.APIKey = os.Getenv(envVar)
+		logger.Debug("Substituted API key from environment variable: %s", envVar)
+	}
+
+	// Handle environment variable substitution for API URL
+	if strings.HasPrefix(modelConfig.APIURL, "${") && strings.HasSuffix(modelConfig.APIURL, "}") {
+		envVar := strings.TrimSuffix(strings.TrimPrefix(modelConfig.APIURL, "${"), "}")
+		modelConfig.APIURL = os.Getenv(envVar)
+		logger.Debug("Substituted API URL from environment variable: %s = %s", envVar, modelConfig.APIURL)
 	}
 
 	// Resolve multiple config files into a single merged config file
-	logger := common.GetLogger()
 	if len(toolsFiles) == 0 {
 		return agent.AgentConfig{}, fmt.Errorf("tools configuration file(s) are required")
 	}
@@ -243,9 +256,9 @@ The agent will try to debug the issue with the given tools.
 			}
 		}()
 
-		// Print agent output
+		// Print agent output (using Print not Println to respect formatting from event handler)
 		for output := range agentOutput {
-			fmt.Println(output)
+			fmt.Print(output)
 		}
 
 		// Wait for all goroutines with a timeout to prevent hanging
@@ -258,9 +271,10 @@ The agent will try to debug the issue with the given tools.
 		select {
 		case <-done:
 			// All goroutines finished normally
+			logger.Debug("All goroutines completed successfully")
 		case <-time.After(5 * time.Second):
-			// Force exit after timeout
-			logger.Info("Forcing shutdown after timeout")
+			// Force exit after timeout (agent already completed, this is just cleanup)
+			logger.Debug("Cleanup timeout reached, forcing shutdown (agent task already completed)")
 		}
 
 		return nil
@@ -274,7 +288,7 @@ func init() {
 
 	// Add agent-specific flags
 	agentCommand.Flags().StringVarP(&agentModel, "model", "m", "", "LLM model to use (required)")
-	agentCommand.Flags().StringVarP(&agentSystemPrompt, "system-prompt", "s", "You are a helpful assistant.", "System prompt for the LLM")
+	agentCommand.Flags().StringVarP(&agentSystemPrompt, "system-prompt", "s", "", "System prompt for the LLM (optional, uses model-specific defaults if not provided)")
 	agentCommand.Flags().StringVarP(&agentUserPrompt, "user-prompt", "u", "", "Initial user prompt for the LLM")
 	agentCommand.Flags().StringVarP(&agentOpenAIApiKey, "openai-api-key", "k", "", "OpenAI API key (or set OPENAI_API_KEY environment variable)")
 	agentCommand.Flags().StringVarP(&agentOpenAIApiURL, "openai-api-url", "b", "", "Base URL for the OpenAI API (optional)")

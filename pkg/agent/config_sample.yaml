@@ -1,20 +1,33 @@
 agent:
+  orchestrator:
+    model: "gpt-4o"
+    class: "openai"
+    name: "orchestrator"
+    api-key: "${OPENAI_API_KEY}"
+    api-url: "https://api.openai.com/v1"
+    prompts: {}
+      # IMPORTANT: the default system prompts will be used. Override this with your own system prompts if you want to.
+      # system:
+      #- "You are an orchestrator agent responsible for planning and coordinating tasks."
+      #- "Break down complex tasks into steps and delegate tool execution to your tool-runner sub-agent."
+      #- "Check if tasks are completed and provide clear summaries to the user."
+
+  tool-runner:
+    model: "gpt-4o-mini"  # Can use a lighter/cheaper model for tool execution
+    class: "openai"
+    name: "tool-runner"
+    api-key: "${OPENAI_API_KEY}"
+    api-url: "https://api.openai.com/v1"
+
+  # If orchestrator/tool-runner are not specified, the first default model is used
   models:
     - model: "gpt-4o"
       class: "openai"
       name: "openai"
       default: true
-      api-key: "your-openai-api-key"
+      api-key: "${OPENAI_API_KEY}"
       api-url: "https://api.openai.com/v1"
-      prompts:
-        system:
-        - "You are a helpful assistant."
-        - "Use the available tools to help diagnose and solve problems."
 
     - model: "gemma3n"
       class: "ollama"
       name: "ollama"
-      prompts:
-        system:
-        - "You are a helpful assistant."
-        - "Please provide detailed explanations."

@@ -1,8 +1,6 @@
 package command
 
 import (
-	"log"
-	"os"
 	"runtime"
 	"testing"
 
@@ -12,7 +10,7 @@ import (
 // TestImplicitRequirements tests the implicit requirements checking
 // for different runner types
 func TestImplicitRequirements(t *testing.T) {
-	logger := log.New(os.Stderr, "test: ", log.LstdFlags)
+	logger, _ := common.NewLogger("test: ", "", common.LogLevelInfo, false)
 
 	// Test cases for the exec runner
 	t.Run("ExecRunner", func(t *testing.T) {

@@ -26,15 +26,15 @@
    cd mcpshell
    ```
 
-2. Build the application:
+1. Build the application:
 
    ```console
    make build
    ```
-   
+
    This will create a binary in the `build` directory.
 
-3. Alternatively, install the application:
+1. Alternatively, install the application:
 
    ```console
    make install
@@ -57,8 +57,8 @@ These checks help maintain code quality and prevent regressions as the project e
 This project uses GitHub Actions to automatically build and release binaries. When a tag is pushed, the workflow:
 
 1. Builds binaries for multiple platforms (Linux, macOS, Windows)
-2. Creates a GitHub release
-3. Attaches the binaries to the release
+1. Creates a GitHub release
+1. Attaches the binaries to the release
 
 To create a new release:
 
@@ -80,4 +80,4 @@ The release will appear on the GitHub Releases page with binaries for each suppo
 - `make run`: Run the application
 - `make install`: Install the application
 - `make lint`: Run linting
-- `make help`: Show help 
+- `make help`: Show help

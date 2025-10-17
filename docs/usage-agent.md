@@ -7,10 +7,10 @@ The MCPShell can be run in "agent mode" to establish a direct connection between
 In agent mode, MCPShell:
 
 1. Connects directly to an LLM API (currently OpenAI-compatible APIs)
-2. Makes your tools available to the LLM
-3. Manages the conversation flow.
-4. Handles tool execution requests
-5. Provides the tool results back to the LLM
+1. Makes your tools available to the LLM
+1. Manages the conversation flow.
+1. Handles tool execution requests
+1. Provides the tool results back to the LLM
 
 This creates a complete AI agent that can perform tasks on your system using your defined tools.
 
@@ -45,7 +45,7 @@ MCPShell has agent-specific configuration that includes model definitions with p
 
 - Configuration file structure and syntax
 - Model configuration fields
-- Environment variable substitution  
+- Environment variable substitution
 - Configuration management commands
 - Example configurations
 
@@ -146,10 +146,10 @@ mcpshell agent --tools disk-analyzer.yaml
 The agent will:
 
 1. Load model and API settings from `~/.mcpshell/agent.yaml` (see [Agent Configuration Guide](usage-agent-conf.md))
-2. Load system prompts from the agent configuration
-3. Load tools from `disk-analyzer.yaml`
-4. Connect to the configured LLM API
-5. Process the LLM's responses and execute tool calls as requested
+1. Load system prompts from the agent configuration
+1. Load tools from `disk-analyzer.yaml`
+1. Connect to the configured LLM API
+1. Process the LLM's responses and execute tool calls as requested
 
 ## Interacting with the Agent
 
@@ -172,8 +172,10 @@ In one-shot mode (with the `--once` flag), the agent will:
 When developing agents, you can:
 
 1. Enable debug logging with `--log-level debug`
-2. Examine the log file for detailed information
-3. Test with the `exe` command to verify individual tools:
+
+1. Examine the log file for detailed information
+
+1. Test with the `exe` command to verify individual tools:
 
    ```bash
    mcpshell exe --tools disk-analyzer.yaml disk_usage directory="/" max_depth=2

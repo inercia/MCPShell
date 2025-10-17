@@ -79,6 +79,11 @@ format:
 	@go mod tidy
 	@echo ">>> ... code formatted successfully"
 
+format-md:
+	@echo ">>> Formatting Markdown code..."
+	@find . -name "*.md" -type f -exec mdformat {} \;
+	@echo ">>> ... markdown code formatted successfully"
+
 # Validate all YAML configuration files in examples directory
 validate-examples: build
 	@echo ">>> Validating example YAML configurations..."

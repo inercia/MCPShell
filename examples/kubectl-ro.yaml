@@ -21,12 +21,13 @@ mcp:
           type: string
           description: "Resource type to list (pods, deployments, services, configmaps, secrets, etc.)"
           required: true
+        context:
+          type: string
+          description: "Kubernetes context to use (required)"
+          required: true
         ns:
           type: string
           description: "Kubernetes namespace (optional, uses current context's namespace if not specified)"
-        context:
-          type: string
-          description: "Kubernetes context to use (optional, uses current context if not specified)"
         labels:
           type: string
           description: "Label selector to filter resources (e.g. 'app=nginx')"
@@ -55,25 +56,24 @@ mcp:
         - "resource.size() <= 30"                                  # Reasonable length limit
         - "!resource.contains(' ')"                                # No spaces in resource name
         - "!resource.contains(';')"                                # Prevent injection
+        - "context.size() > 0 && context.size() <= 253"            # Valid context name (required)
         - "ns == '' || (ns.size() <= 63 && ns.matches('^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'))"  # Valid k8s namespace
-        - "context == '' || context.size() <= 253"                 # Valid context name
         - "labels == '' || labels.size() <= 100"                   # Reasonable label length
         - "output_format == '' || output_format == 'wide' || output_format == 'json' || output_format == 'yaml'"  # Valid formats
       run:
         command: |
-          CONTEXT_PARAM="{{ if .context }}--context={{ .context }}{{ end }}"
           NAMESPACE_PARAM="{{ if .ns }}-n {{ .ns }}{{ end }}"
           LABEL_PARAM="{{ if .labels }}-l {{ .labels }}{{ end }}"
           FORMAT_PARAM="{{ if .output_format }}-o {{ .output_format }}{{ end }}"
           
           {{ if .filter_grep }}
-          kubectl $CONTEXT_PARAM get {{ .resource }} $NAMESPACE_PARAM $LABEL_PARAM $FORMAT_PARAM | grep -F "{{ .filter_grep }}" || true
+          kubectl --context={{ .context }} --request-timeout=30s get {{ .resource }} $NAMESPACE_PARAM $LABEL_PARAM $FORMAT_PARAM | grep -F "{{ .filter_grep }}" || true
           {{ else if .filter_grep_regex }}
-          kubectl $CONTEXT_PARAM get {{ .resource }} $NAMESPACE_PARAM $LABEL_PARAM $FORMAT_PARAM | grep -E "{{ .filter_grep_regex }}" || true
+          kubectl --context={{ .context }} --request-timeout=30s get {{ .resource }} $NAMESPACE_PARAM $LABEL_PARAM $FORMAT_PARAM | grep -E "{{ .filter_grep_regex }}" || true
           {{ else if .filter_jq }}
-          kubectl $CONTEXT_PARAM get {{ .resource }} $NAMESPACE_PARAM $LABEL_PARAM $FORMAT_PARAM | jq "{{ .filter_jq }}" || true
+          kubectl --context={{ .context }} --request-timeout=30s get {{ .resource }} $NAMESPACE_PARAM $LABEL_PARAM $FORMAT_PARAM | jq "{{ .filter_jq }}" || true
           {{ else }}
-          kubectl $CONTEXT_PARAM get {{ .resource }} $NAMESPACE_PARAM $LABEL_PARAM $FORMAT_PARAM
+          kubectl --context={{ .context }} --request-timeout=30s get {{ .resource }} $NAMESPACE_PARAM $LABEL_PARAM $FORMAT_PARAM
           {{ end }}
         env:
           - KUBECONFIG
@@ -87,6 +87,7 @@ mcp:
                 - "/bin"
                 - "/etc"
                 - "{{ env \"HOME\" }}/.kube"
+              allow_read_files:
                 - "{{ env \"KUBECONFIG\" }}"
           - name: firejail
             options:
@@ -97,6 +98,7 @@ mcp:
                 - "/bin"
                 - "/etc"
                 - "{{ env \"HOME\" }}/.kube"
+              allow_read_files:
                 - "{{ env \"KUBECONFIG\" }}"
           - name: exec
             requirements: {}
@@ -127,17 +129,16 @@ mcp:
         - "resource.size() <= 30"                                  # Reasonable length limit
         - "!resource.contains(' ')"                                # No spaces in resource name
         - "!resource.contains(';')"                                # Prevent injection
+        - "context.size() > 0 && context.size() <= 253"            # Valid context name (required)
         - "name.size() <= 253"                                     # Maximum DNS label length
         - "name == '' || !name.contains(';')"                      # Prevent injection
         - "ns == '' || (ns.size() <= 63 && ns.matches('^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'))"  # Valid k8s namespace
-        - "context == '' || context.size() <= 253"                 # Valid context name
       run:
         command: |
-          CONTEXT_PARAM="{{ if .context }}--context={{ .context }}{{ end }}"
           NAMESPACE_PARAM="{{ if .ns }}-n {{ .ns }}{{ end }}"          
           NAME_PARAM="{{ .name }}"
           
-          kubectl $CONTEXT_PARAM describe {{ .resource }} $NAME_PARAM $NAMESPACE_PARAM
+          kubectl --context={{ .context }} --request-timeout=30s describe {{ .resource }} $NAME_PARAM $NAMESPACE_PARAM
         env:
           - KUBECONFIG
         runners:
@@ -150,6 +151,7 @@ mcp:
                 - "/bin"
                 - "/etc"
                 - "{{ env \"HOME\" }}/.kube"
+              allow_read_files:
                 - "{{ env \"KUBECONFIG\" }}"
           - name: firejail
             options:
@@ -160,6 +162,7 @@ mcp:
                 - "/bin"
                 - "/etc"
                 - "{{ env \"HOME\" }}/.kube"
+              allow_read_files:
                 - "{{ env \"KUBECONFIG\" }}"
           - name: exec
             requirements: {}
@@ -178,15 +181,16 @@ mcp:
           type: string
           description: "Pod name"
           required: true
+        context:
+          type: string
+          description: "Kubernetes context to use (required)"
+          required: true
         container:
           type: string
           description: "Container name (optional, uses the first container if not specified)"
         ns:
           type: string
           description: "Kubernetes namespace (optional, uses current context's namespace if not specified)"
-        context:
-          type: string
-          description: "Kubernetes context to use (optional, uses current context if not specified)"
         tail:
           type: number
           description: "Number of lines to show from the end (optional)"
@@ -209,9 +213,9 @@ mcp:
         - "pod.size() <= 253"                                      # Maximum DNS label length
         - "!pod.contains(' ')"                                     # No spaces in pod name
         - "!pod.contains(';')"                                     # Prevent injection
+        - "context.size() > 0 && context.size() <= 253"            # Valid context name (required)
         - "container == '' || (container.size() <= 253 && !container.contains(';'))"  # Valid container name
         - "ns == '' || (ns.size() <= 63 && ns.matches('^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'))"  # Valid k8s namespace
-        - "context == '' || context.size() <= 253"                 # Valid context name
         - "tail >= 0.0 && tail <= 10000.0"                         # Reasonable tail lines limit
         - "since == '' || since.matches('^[0-9]+(s|m|h|d)$')"      # Valid duration format
         - "filter_grep == '' || (filter_grep.size() <= 100 && !filter_grep.contains(';'))"  # Safe grep pattern
@@ -219,15 +223,14 @@ mcp:
         - "(filter_grep == '' || filter_grep_regex == '')"                       # Only one of filter_grep or filter_grep_regex can be used
       run:
         command: |
-          CONTEXT_PARAM="{{ if .context }}--context={{ .context }}{{ end }}"
           NAMESPACE_PARAM="{{ if .ns }}-n {{ .ns }}{{ end }}"
           CONTAINER_PARAM="{{ if .container }}-c {{ .container }}{{ end }}"
-          TAIL_PARAM=""
+          TAIL_PARAM="{{ if .tail }}--tail={{ .tail }}{{ else }}--tail=100{{ end }}"
           PREVIOUS_PARAM="{{ if .previous }}-p {{ end }}"
           SINCE_PARAM="{{ if .since }}--since={{ .since }}{{ end }}"
           
           # Base kubectl logs command
-          CMD="kubectl $CONTEXT_PARAM logs {{ .pod }} $NAMESPACE_PARAM $CONTAINER_PARAM $TAIL_PARAM $PREVIOUS_PARAM $SINCE_PARAM"
+          CMD="kubectl --context={{ .context }} --request-timeout=30s logs {{ .pod }} $NAMESPACE_PARAM $CONTAINER_PARAM $TAIL_PARAM $PREVIOUS_PARAM $SINCE_PARAM"
           
           # Add grep filtering if specified
           {{ if .filter_grep }}
@@ -249,6 +252,7 @@ mcp:
                 - "/bin"
                 - "/etc"
                 - "{{ env \"HOME\" }}/.kube"
+              allow_read_files:
                 - "{{ env \"KUBECONFIG\" }}"
           - name: firejail
             options:
@@ -259,6 +263,7 @@ mcp:
                 - "/bin"
                 - "/etc"
                 - "{{ env \"HOME\" }}/.kube"
+              allow_read_files:
                 - "{{ env \"KUBECONFIG\" }}"
           - name: exec
             requirements: {}
@@ -278,7 +283,7 @@ mcp:
         command: |
           CONTEXT_PARAM="{{ if .context }}--context={{ .context }}{{ end }}"
           
-          kubectl $CONTEXT_PARAM config get-contexts
+          kubectl $CONTEXT_PARAM --request-timeout=30s config get-contexts
         env:
           - KUBECONFIG
         runners:
@@ -291,6 +296,7 @@ mcp:
                 - "/bin"
                 - "/etc"
                 - "{{ env \"HOME\" }}/.kube"
+              allow_read_files:
                 - "{{ env \"KUBECONFIG\" }}"
           - name: firejail
             options:
@@ -301,6 +307,7 @@ mcp:
                 - "/bin"
                 - "/etc"
                 - "{{ env \"HOME\" }}/.kube"
+              allow_read_files:
                 - "{{ env \"KUBECONFIG\" }}"
           - name: exec
             requirements: {}
@@ -320,7 +327,7 @@ mcp:
         command: |
           CONTEXT_PARAM="{{ if .context }}--context={{ .context }}{{ end }}"
           
-          kubectl $CONTEXT_PARAM config current-context
+          kubectl $CONTEXT_PARAM --request-timeout=30s config current-context
         env:
           - KUBECONFIG
         runners:
@@ -333,6 +340,7 @@ mcp:
                 - "/bin"
                 - "/etc"
                 - "{{ env \"HOME\" }}/.kube"
+              allow_read_files:
                 - "{{ env \"KUBECONFIG\" }}"
           - name: firejail
             options:
@@ -343,6 +351,7 @@ mcp:
                 - "/bin"
                 - "/etc"
                 - "{{ env \"HOME\" }}/.kube"
+              allow_read_files:
                 - "{{ env \"KUBECONFIG\" }}"
           - name: exec
             requirements: {}
@@ -357,10 +366,13 @@ mcp:
       params:
         context:
           type: string
-          description: "Kubernetes context to use (optional, uses current context if not specified)"
+          description: "Kubernetes context to use (required)"
+          required: true
+      constraints:
+        - "context.size() > 0 && context.size() <= 253"            # Valid context name (required)
       run:
         command: |          
-          kubectl {{ if .context }}--context={{ .context }}{{ end }} get namespaces
+          kubectl --context={{ .context }} --request-timeout=30s get namespaces
         env:
           - KUBECONFIG
         runners:
@@ -373,6 +385,7 @@ mcp:
                 - "/bin"
                 - "/etc"
                 - "{{ env \"HOME\" }}/.kube"
+              allow_read_files:
                 - "{{ env \"KUBECONFIG\" }}"
           - name: firejail
             options:
@@ -383,6 +396,7 @@ mcp:
                 - "/bin"
                 - "/etc"
                 - "{{ env \"HOME\" }}/.kube"
+              allow_read_files:
                 - "{{ env \"KUBECONFIG\" }}"
           - name: exec
             requirements: {}
@@ -402,14 +416,15 @@ mcp:
       params:
         context:
           type: string
-          description: "Kubernetes context to use (optional, uses current context if not specified)"
-        ns:
-          type: string
-          description: "Kubernetes namespace (optional, uses current context's namespace if not specified)"
+          description: "Kubernetes context to use (required)"
+          required: true
         pod:
           type: string
           description: "Pod name"
           required: true
+        ns:
+          type: string
+          description: "Kubernetes namespace (optional, uses current context's namespace if not specified)"
         pod_port:
           type: string
           description: "Remote port in the Pod to connect to (e.g. 8080). Only one port can be provided."
@@ -433,8 +448,8 @@ mcp:
           type: string
           description: "grep regex pattern to apply to the response (optional)"
       constraints:
+        - "context.size() > 0 && context.size() <= 253"            # Valid context name (required)
         - "ns == '' || (ns.size() <= 63 && ns.matches('^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'))"  # Valid k8s namespace
-        - "context == '' || context.size() <= 253"                 # Valid context name
         - "pod_port.size() > 0"                                    # Port must not be empty
         - "pod_port.matches('^[0-9]+$')"                           # Port must be a number
         - "path.size() > 0"                                        # Path must not be empty
@@ -444,7 +459,6 @@ mcp:
       run:
         command: |
 
-          CONTEXT_PARAM="{{ if .context }}--context={{ .context }}{{ end }}"
           NAMESPACE_PARAM="{{ if .ns }}-n {{ .ns }}{{ end }}"
           CURL_ARGS="-s {{ if .curl_args }}{{ .curl_args }}{{ end }}"
           localport="{{ if .local_port }}{{ .local_port }}{{ else }}54320{{ end }}"
@@ -452,7 +466,7 @@ mcp:
 
           # nmap -sT -p $localport localhost || true   # This would show that the port is closed
 
-          kubectl $CONTEXT_PARAM port-forward $NAMESPACE_PARAM pod/{{ .pod }} $localport:$remoteport >/dev/null &
+          kubectl --context={{ .context }} port-forward $NAMESPACE_PARAM pod/{{ .pod }} $localport:$remoteport >/dev/null &
           pid=$!
           trap '{
               kill $pid
@@ -490,6 +504,7 @@ mcp:
                 - "/usr/local/bin"
                 - "/opt/homebrew/bin"
                 - "{{ env \"HOME\" }}/.kube"
+              allow_read_files:
                 - "{{ env \"KUBECONFIG\" }}"
           - name: firejail
             options:
@@ -502,6 +517,7 @@ mcp:
                 - "/usr/local/bin"
                 - "/opt/homebrew/bin"
                 - "{{ env \"HOME\" }}/.kube"
+              allow_read_files:
                 - "{{ env \"KUBECONFIG\" }}"
           - name: exec
             requirements: {}
@@ -550,14 +566,15 @@ mcp:
       params:
         context:
           type: string
-          description: "Kubernetes context to use (optional, uses current context if not specified)"
-        ns:
-          type: string
-          description: "Kubernetes namespace (optional, uses current context's namespace if not specified)"
+          description: "Kubernetes context to use (required)"
+          required: true
         pod:
           type: string
           description: "Pod name"
           required: true
+        ns:
+          type: string
+          description: "Kubernetes namespace (optional, uses current context's namespace if not specified)"
         pod_port:
           type: string
           description: "Remote port in the Pod to connect to (e.g. 8080). Only one port can be provided."
@@ -581,8 +598,8 @@ mcp:
           type: string
           description: "grep regex pattern to apply to the response (optional)"
       constraints:
+        - "context.size() > 0 && context.size() <= 253"            # Valid context name (required)
         - "ns == '' || (ns.size() <= 63 && ns.matches('^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'))"  # Valid k8s namespace
-        - "context == '' || context.size() <= 253"                 # Valid context name
         - "pod_port.size() > 0"                                        # Port must not be empty
         - "pod_port.matches('^[0-9]+$')"                               # Port must be a number
         - "path.size() > 0"                                        # Path must not be empty
@@ -592,7 +609,6 @@ mcp:
       run:
         command: |
 
-          CONTEXT_PARAM="{{ if .context }}--context={{ .context }}{{ end }}"
           NAMESPACE_PARAM="{{ if .ns }}-n {{ .ns }}{{ end }}"
           CURL_ARGS="-s {{ if .curl_args }}{{ .curl_args }}{{ end }}"
           localport="{{ if .local_port }}{{ .local_port }}{{ else }}54320{{ end }}"
@@ -600,7 +616,7 @@ mcp:
 
           # nmap -sT -p $localport localhost || true   # This would show that the port is closed
 
-          kubectl $CONTEXT_PARAM port-forward $NAMESPACE_PARAM pod/{{ .pod }} $localport:$remoteport >/dev/null &
+          kubectl --context={{ .context }} port-forward $NAMESPACE_PARAM pod/{{ .pod }} $localport:$remoteport >/dev/null &
           pid=$!
           trap '{
               kill $pid
@@ -641,6 +657,7 @@ mcp:
                 - "/usr/local/bin"
                 - "/opt/homebrew/bin"
                 - "{{ env \"HOME\" }}/.kube"
+              allow_read_files:
                 - "{{ env \"KUBECONFIG\" }}"
           - name: firejail
             options:
@@ -653,6 +670,7 @@ mcp:
                 - "/usr/local/bin"
                 - "/opt/homebrew/bin"
                 - "{{ env \"HOME\" }}/.kube"
+              allow_read_files:
                 - "{{ env \"KUBECONFIG\" }}"
           - name: exec
             requirements: {}
