@@ -79,7 +79,7 @@ func (m *MCPToolSet) convertMCPToolToCagent(mcpTool mcp.Tool) cagentTools.Tool {
 			}
 		}
 
-		m.logger.Info("Executing MCP tool '%s' via cagent with args: %+v", mcpTool.Name, args)
+		m.logger.Debug("Executing MCP tool '%s' with args: %+v", mcpTool.Name, args)
 
 		// Execute the tool through the MCP server
 		result, err := m.server.ExecuteTool(ctx, mcpTool.Name, args)

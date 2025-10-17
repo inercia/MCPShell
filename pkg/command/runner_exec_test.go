@@ -2,11 +2,11 @@ package command
 
 import (
 	"context"
-	"log"
-	"os"
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/inercia/MCPShell/pkg/common"
 )
 
 func TestNewRunnerExecOptions(t *testing.T) {
@@ -110,7 +110,7 @@ func TestRunnerExec_Run(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			logger := log.New(os.Stderr, "test-runner-exec: ", log.LstdFlags)
+			logger, _ := common.NewLogger("test-runner-exec: ", "", common.LogLevelInfo, false)
 			r, err := NewRunnerExec(RunnerOptions{}, logger)
 			if err != nil {
 				t.Fatalf("Failed to create RunnerExec: %v", err)
@@ -134,7 +134,7 @@ func TestRunnerExec_Run(t *testing.T) {
 
 func TestRunnerExec_RunWithEnvExpansion(t *testing.T) {
 	// This test demonstrates using the -c flag to execute a command with environment variable expansion
-	logger := log.New(os.Stderr, "test-runner-exec-env: ", log.LstdFlags)
+	logger, _ := common.NewLogger("test-runner-exec-env: ", "", common.LogLevelInfo, false)
 
 	r, err := NewRunnerExec(RunnerOptions{}, logger)
 	if err != nil {
@@ -164,7 +164,7 @@ func TestRunnerExec_RunWithEnvExpansion(t *testing.T) {
 }
 
 func TestRunnerExec_Optimization_SingleExecutable(t *testing.T) {
-	logger := log.New(os.Stderr, "test-runner-exec-opt: ", log.LstdFlags)
+	logger, _ := common.NewLogger("test-runner-exec-opt: ", "", common.LogLevelInfo, false)
 	r, err := NewRunnerExec(RunnerOptions{}, logger)
 	if err != nil {
 		t.Fatalf("Failed to create RunnerExec: %v", err)

@@ -2,12 +2,13 @@ package command
 
 import (
 	"context"
-	"log"
 	"os"
 	"reflect"
 	"runtime"
 	"strings"
 	"testing"
+
+	"github.com/inercia/MCPShell/pkg/common"
 )
 
 func TestNewRunnerSandboxExecOptions(t *testing.T) {
@@ -105,7 +106,7 @@ func TestRunnerSandboxExec_Run(t *testing.T) {
 	}()
 
 	// Create a logger for the test
-	logger := log.New(os.Stderr, "test-runner-sandbox: ", log.LstdFlags)
+	logger, _ := common.NewLogger("test-runner-sandbox: ", "", common.LogLevelInfo, false)
 	ctx := context.Background()
 	shell := "" // use default
 
@@ -345,7 +346,7 @@ func TestRunnerSandboxExec_Optimization_SingleExecutable(t *testing.T) {
 	if runtime.GOOS != "darwin" {
 		t.Skip("Skipping test on non-macOS platform")
 	}
-	logger := log.New(os.Stderr, "test-runner-sandbox-opt: ", log.LstdFlags)
+	logger, _ := common.NewLogger("test-runner-sandbox-opt: ", "", common.LogLevelInfo, false)
 	runner, err := NewRunnerSandboxExec(RunnerOptions{}, logger)
 	if err != nil {
 		t.Fatalf("Failed to create RunnerSandboxExec: %v", err)

@@ -1,13 +1,11 @@
 package common
 
 import (
-	"io"
-	"log"
 	"testing"
 )
 
 // Create a test logger that discards output to keep test output clean
-var testLogger = log.New(io.Discard, "", 0)
+var testLogger, _ = NewLogger("", "", LogLevelNone, false)
 
 // TestConstraints tests both compilation and evaluation of constraints
 func TestConstraints(t *testing.T) {

@@ -2,7 +2,6 @@ package common
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/google/cel-go/cel"
 )
@@ -11,19 +10,19 @@ import (
 type CompiledConstraints struct {
 	programs    []cel.Program
 	expressions []string // Original constraint expressions
-	logger      *log.Logger
+	logger      *Logger
 }
 
 // NewCompiledConstraints compiles a list of CEL constraint expressions
 // paramTypes is a map of parameter names to their types
 // logger is required for logging constraint compilation and evaluation information
-func NewCompiledConstraints(constraints []string, paramTypes map[string]ParamConfig, logger *log.Logger) (*CompiledConstraints, error) {
+func NewCompiledConstraints(constraints []string, paramTypes map[string]ParamConfig, logger *Logger) (*CompiledConstraints, error) {
 	if logger == nil {
 		return nil, fmt.Errorf("logger is required for constraint compilation")
 	}
 
 	if len(constraints) == 0 {
-		logger.Println("No constraints to compile")
+		logger.Debug("No constraints to compile")
 		return &CompiledConstraints{logger: logger}, nil
 	}
 
@@ -98,11 +97,11 @@ func (cc *CompiledConstraints) Evaluate(args map[string]interface{}, params map[
 
 	if len(cc.programs) == 0 {
 		// If there are no constraints, evaluation passes by default
-		cc.logger.Println("No constraints to evaluate, passing by default")
+		cc.logger.Debug("No constraints to evaluate, passing by default")
 		return true, nil, nil
 	}
 
-	cc.logger.Printf("Evaluating %d constraints with details", len(cc.programs))
+	cc.logger.Debug("Evaluating %d constraints with details", len(cc.programs))
 
 	// Create a copy of args to avoid modifying the original
 	evalArgs := make(map[string]interface{})
@@ -165,7 +164,7 @@ func (cc *CompiledConstraints) Evaluate(args map[string]interface{}, params map[
 	}
 
 	// All constraints passed
-	cc.logger.Println("All constraints passed evaluation")
+	cc.logger.Debug("All constraints passed evaluation")
 	return true, nil, nil
 }
 

@@ -150,7 +150,7 @@ func (s *Server) Validate() error {
 		// Validate constraints by attempting to compile them
 		if len(toolDef.Config.Constraints) > 0 {
 			s.logger.Debug("Compiling %d constraints for tool '%s'", len(toolDef.Config.Constraints), toolDef.MCPTool.Name)
-			_, err := common.NewCompiledConstraints(toolDef.Config.Constraints, paramTypes, s.logger.Logger)
+			_, err := common.NewCompiledConstraints(toolDef.Config.Constraints, paramTypes, s.logger)
 			if err != nil {
 				s.logger.Error("Failed to compile constraints for tool '%s': %v", toolDef.MCPTool.Name, err)
 				return fmt.Errorf("constraint compilation error for tool '%s': %w", toolDef.MCPTool.Name, err)
@@ -442,7 +442,7 @@ func (s *Server) ExecuteTool(ctx context.Context, toolName string, args map[stri
 	}
 
 	// Log the arguments being passed to help debug
-	s.logger.Info("Executing tool '%s' with arguments: %+v", toolName, args)
+	s.logger.Debug("Executing tool '%s' with arguments: %+v", toolName, args)
 
 	// Create a properly formatted JSON-RPC request manually
 	jsonRpcRequest := map[string]interface{}{

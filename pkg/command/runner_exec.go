@@ -5,16 +5,17 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"github.com/inercia/MCPShell/pkg/common"
 )
 
 // RunnerExec implements the Runner interface
 type RunnerExec struct {
-	logger  *log.Logger
+	logger  *common.Logger
 	options RunnerExecOptions
 }
 
@@ -38,9 +39,9 @@ func NewRunnerExecOptions(options RunnerOptions) (RunnerExecOptions, error) {
 
 // NewRunnerExec creates a new ExecRunner with the provided logger
 // If logger is nil, a default logger is created
-func NewRunnerExec(options RunnerOptions, logger *log.Logger) (*RunnerExec, error) {
+func NewRunnerExec(options RunnerOptions, logger *common.Logger) (*RunnerExec, error) {
 	if logger == nil {
-		logger = log.New(os.Stderr, "runner-exec: ", log.LstdFlags)
+		logger = common.GetLogger()
 	}
 
 	execOptions, err := NewRunnerExecOptions(options)

@@ -4,7 +4,6 @@ package command
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -16,7 +15,7 @@ import (
 
 // DockerRunner executes commands inside a Docker container.
 type DockerRunner struct {
-	logger *log.Logger
+	logger *common.Logger
 	opts   DockerRunnerOptions
 }
 
@@ -310,9 +309,9 @@ func NewDockerRunnerOptions(genericOpts RunnerOptions) (DockerRunnerOptions, err
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // NewDockerRunner creates a new Docker runner with the specified options.
-func NewDockerRunner(options RunnerOptions, logger *log.Logger) (*DockerRunner, error) {
+func NewDockerRunner(options RunnerOptions, logger *common.Logger) (*DockerRunner, error) {
 	if logger == nil {
-		return nil, fmt.Errorf("logger is required for DockerRunner")
+		logger = common.GetLogger()
 	}
 
 	dockerOpts, err := NewDockerRunnerOptions(options)

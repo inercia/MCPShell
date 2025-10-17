@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"runtime"
@@ -22,7 +21,7 @@ var firejailProfileTemplate string
 
 // RunnerFirejail implements the Runner interface using firejail on Linux
 type RunnerFirejail struct {
-	logger     *log.Logger
+	logger     *common.Logger
 	profileTpl *template.Template
 	options    RunnerFirejailOptions
 }
@@ -54,9 +53,9 @@ func NewRunnerFirejailOptions(options RunnerOptions) (RunnerFirejailOptions, err
 
 // NewRunnerFirejail creates a new RunnerFirejail with the provided logger
 // If logger is nil, a default logger is created
-func NewRunnerFirejail(options RunnerOptions, logger *log.Logger) (*RunnerFirejail, error) {
+func NewRunnerFirejail(options RunnerOptions, logger *common.Logger) (*RunnerFirejail, error) {
 	if logger == nil {
-		logger = log.New(os.Stderr, "runner-firejail: ", log.LstdFlags)
+		logger = common.GetLogger()
 	}
 
 	// Parse the firejail profile template

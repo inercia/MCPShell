@@ -4,7 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
+
+	"github.com/inercia/MCPShell/pkg/common"
 )
 
 // RunnerType is an identifier for the type of runner to use.
@@ -45,7 +46,7 @@ type Runner interface {
 }
 
 // NewRunner creates a new Runner based on the given type
-func NewRunner(runnerType RunnerType, options RunnerOptions, logger *log.Logger) (Runner, error) {
+func NewRunner(runnerType RunnerType, options RunnerOptions, logger *common.Logger) (Runner, error) {
 	var runner Runner
 	var err error
 

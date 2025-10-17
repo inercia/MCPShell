@@ -2,7 +2,6 @@ package command
 
 import (
 	"context"
-	"log"
 	"os"
 	"os/exec"
 	"strings"
@@ -33,7 +32,7 @@ func TestDockerRunnerInitialization(t *testing.T) {
 		t.Skip("Docker not installed or not running, skipping test")
 	}
 
-	logger := log.New(os.Stderr, "test-docker: ", log.LstdFlags)
+	logger, _ := common.NewLogger("test-docker: ", "", common.LogLevelInfo, false)
 
 	testCases := []struct {
 		name        string
@@ -85,7 +84,7 @@ func TestDockerRunnerBasic(t *testing.T) {
 		t.Skip("Docker not installed or not running, skipping test")
 	}
 
-	logger := log.New(os.Stderr, "test-docker: ", log.LstdFlags)
+	logger, _ := common.NewLogger("test-docker: ", "", common.LogLevelInfo, false)
 
 	// Create a runner with alpine image
 	runner, err := NewDockerRunner(RunnerOptions{
@@ -121,7 +120,7 @@ func TestDockerRunnerNetworking(t *testing.T) {
 		t.Skip("Skipping network test in GitHub Actions environment")
 	}
 
-	logger := log.New(os.Stderr, "test-docker: ", log.LstdFlags)
+	logger, _ := common.NewLogger("test-docker: ", "", common.LogLevelInfo, false)
 
 	testCases := []struct {
 		name            string
@@ -174,7 +173,7 @@ func TestDockerRunnerEnvironmentVariables(t *testing.T) {
 		t.Skip("Docker not installed or not running, skipping test")
 	}
 
-	logger := log.New(os.Stderr, "test-docker: ", log.LstdFlags)
+	logger, _ := common.NewLogger("test-docker: ", "", common.LogLevelInfo, false)
 
 	// Create a runner with alpine image
 	runner, err := NewDockerRunner(RunnerOptions{
@@ -222,7 +221,7 @@ func TestDockerRunnerPrepareCommand(t *testing.T) {
 		t.Skip("Docker not installed or not running, skipping test")
 	}
 
-	logger := log.New(os.Stderr, "test-docker: ", log.LstdFlags)
+	logger, _ := common.NewLogger("test-docker: ", "", common.LogLevelInfo, false)
 
 	// Create a runner with alpine image and prepare command to install grep
 	runner, err := NewDockerRunner(RunnerOptions{
@@ -250,7 +249,7 @@ func TestDockerRunner_Optimization_SingleExecutable(t *testing.T) {
 	if !checkDockerRunning() {
 		t.Skip("Docker not installed or not running, skipping test")
 	}
-	logger := log.New(os.Stderr, "test-docker-opt: ", log.LstdFlags)
+	logger, _ := common.NewLogger("test-docker-opt: ", "", common.LogLevelInfo, false)
 	runner, err := NewDockerRunner(RunnerOptions{
 		"image": "alpine:latest",
 	}, logger)

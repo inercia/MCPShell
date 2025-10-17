@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -23,7 +22,7 @@ var sandboxProfileTemplate string
 
 // RunnerSandboxExec implements the Runner interface using macOS sandbox-exec
 type RunnerSandboxExec struct {
-	logger     *log.Logger
+	logger     *common.Logger
 	profileTpl *template.Template
 	options    RunnerSandboxExecOptions
 }
@@ -55,9 +54,9 @@ func NewRunnerSandboxExecOptions(options RunnerOptions) (RunnerSandboxExecOption
 
 // NewRunnerSandboxExec creates a new RunnerSandboxExec with the provided logger
 // If logger is nil, a default logger is created
-func NewRunnerSandboxExec(options RunnerOptions, logger *log.Logger) (*RunnerSandboxExec, error) {
+func NewRunnerSandboxExec(options RunnerOptions, logger *common.Logger) (*RunnerSandboxExec, error) {
 	if logger == nil {
-		logger = log.New(os.Stderr, "runner-sandbox-exec: ", log.LstdFlags)
+		logger = common.GetLogger()
 	}
 
 	// Parse the sandbox profile template
