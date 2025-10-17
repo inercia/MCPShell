@@ -34,6 +34,8 @@ type RunnerFirejailOptions struct {
 	AllowUserFolders  bool     `json:"allow_user_folders"`
 	AllowReadFolders  []string `json:"allow_read_folders"`
 	AllowWriteFolders []string `json:"allow_write_folders"`
+	AllowReadFiles    []string `json:"allow_read_files"`
+	AllowWriteFiles   []string `json:"allow_write_files"`
 	CustomProfile     string   `json:"custom_profile"`
 }
 
@@ -96,12 +98,18 @@ func (r *RunnerFirejail) Run(ctx context.Context,
 		// Continue execution
 	}
 
-	// replace template variables in allow read and write folders
+	// replace template variables in allow read and write folders and files
 	if len(r.options.AllowReadFolders) > 0 {
 		r.options.AllowReadFolders = common.ProcessTemplateListFlexible(r.options.AllowReadFolders, params)
 	}
 	if len(r.options.AllowWriteFolders) > 0 {
 		r.options.AllowWriteFolders = common.ProcessTemplateListFlexible(r.options.AllowWriteFolders, params)
+	}
+	if len(r.options.AllowReadFiles) > 0 {
+		r.options.AllowReadFiles = common.ProcessTemplateListFlexible(r.options.AllowReadFiles, params)
+	}
+	if len(r.options.AllowWriteFiles) > 0 {
+		r.options.AllowWriteFiles = common.ProcessTemplateListFlexible(r.options.AllowWriteFiles, params)
 	}
 
 	// Generate the profile by rendering the template
@@ -148,7 +156,7 @@ func (r *RunnerFirejail) Run(ctx context.Context,
 	// Check if we can optimize by running a single executable directly
 	if isSingleExecutableCommand(fullCmd) {
 		r.logger.Printf("Optimization: running single executable command directly: %s", fullCmd)
-		execCmd = exec.Command("firejail", "--profile="+profileFile.Name(), fullCmd)
+		execCmd = exec.CommandContext(ctx, "firejail", "--profile="+profileFile.Name(), fullCmd)
 	} else {
 		// Create a temporary file for the command
 		tmpScript, err := os.CreateTemp("", "firejail-command-*.sh")
@@ -185,7 +193,7 @@ func (r *RunnerFirejail) Run(ctx context.Context,
 			return "", fmt.Errorf("failed to make temporary file executable: %w", err)
 		}
 
-		execCmd = exec.Command("firejail", "--profile="+profileFile.Name(), tmpScript.Name())
+		execCmd = exec.CommandContext(ctx, "firejail", "--profile="+profileFile.Name(), tmpScript.Name())
 	}
 
 	// Check if context is done

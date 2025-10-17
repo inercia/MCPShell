@@ -92,10 +92,10 @@ Shared utilities and test fixtures used across all tests.
 When adding new tests:
 
 1. **Determine the category**: agent, exe, runners, or create a new category
-2. **Create test files in the appropriate subdirectory**
-3. **Update `run_tests.sh`** to include the new test in the TEST_FILES array
-4. **Use common utilities** by sourcing `../common/common.sh` (or appropriate path)
-5. **Follow naming conventions**: `test_<functionality>.sh` for scripts
+1. **Create test files in the appropriate subdirectory**
+1. **Update `run_tests.sh`** to include the new test in the TEST_FILES array
+1. **Use common utilities** by sourcing `../common/common.sh` (or appropriate path)
+1. **Follow naming conventions**: `test_<functionality>.sh` for scripts
 
 ## Test Dependencies
 

@@ -56,11 +56,17 @@ func New(cfg Config) *Server {
 	// Process description based on input flags
 	finalDescription, err := GetDescription(cfg)
 	if err != nil {
-		cfg.Logger.Error("Failed to process description flags: %v", err)
+		if cfg.Logger != nil {
+			cfg.Logger.Error("Failed to process description flags: %v", err)
+		}
 	} else if finalDescription != "" {
-		cfg.Logger.Debug("Using MCP server description: %s", finalDescription)
+		if cfg.Logger != nil {
+			cfg.Logger.Debug("Using MCP server description: %s", finalDescription)
+		}
 	} else {
-		cfg.Logger.Debug("No MCP server description provided")
+		if cfg.Logger != nil {
+			cfg.Logger.Debug("No MCP server description provided")
+		}
 	}
 
 	return &Server{

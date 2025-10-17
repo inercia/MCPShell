@@ -38,8 +38,8 @@ run:
 In this example:
 
 1. On macOS with `sandbox-exec` available, the `sandbox-exec` runner will be used
-2. On Linux with `firejail` available, the firejail runner will be used
-3. On any other system, the exec runner will be used as a fallback
+1. On Linux with `firejail` available, the firejail runner will be used
+1. On any other system, the exec runner will be used as a fallback
 
 **Important Notes on Runner Selection:**
 
@@ -81,6 +81,9 @@ runners:
       allow_read_folders:               # List of folders to explicitly allow access to
         - "/tmp"
         - "/path/to/project"
+      allow_read_files:                 # List of specific files to allow access to
+        - "/etc/config.yaml"
+        - "{{ env \"HOME\" }}/app.conf"
 ```
 
 #### Sandbox Configuration Options
@@ -89,11 +92,22 @@ Available options:
 
 - `allow_networking`: When set to `false`, blocks all network access
 - `allow_user_folders`: When set to `false`, restricts access to user folders like Documents, Desktop, etc.
-- `allow_read_folders`: List of directories to explicitly allow access to read, even when other
-  restrictions are in place. Items in this list can use Golang template replacements (using the tool parameters).
-- `allow_write_folders`: List of directories to explicitly allow access to write, even when other
-  restrictions are in place. Items in this list can use Golang template replacements (using the tool parameters).
+- `allow_read_folders`: List of directories to explicitly allow read access to. Items in this list can use
+  Golang template replacements (using the tool parameters).
+- `allow_read_files`: List of specific files to explicitly allow read access to. Items in this list can use
+  Golang template replacements (using the tool parameters).
+- `allow_write_folders`: List of directories to explicitly allow write access to. Items in this list can use
+  Golang template replacements (using the tool parameters).
+- `allow_write_files`: List of specific files to explicitly allow write access to. Items in this list can use
+  Golang template replacements (using the tool parameters).
 - `custom_profile`: Specify a custom sandbox profile for advanced configuration
+
+**Important**: macOS `sandbox-exec` requires different syntax for files vs directories:
+
+- Directories use `(allow file-read* (subpath "path"))` which allows access to the directory and all its contents
+- Files use `(allow file-read* (literal "path"))` which allows access to that specific file only
+
+Use `allow_read_files` for specific file paths (e.g., config files) and `allow_read_folders` for directories.
 
 #### Custom Sandbox Profiles
 
@@ -129,6 +143,9 @@ runners:
       allow_read_folders:               # List of folders to explicitly allow access to
         - "/tmp"
         - "/etc/ssl/certs"
+      allow_read_files:                 # List of specific files to allow access to
+        - "/etc/config.yaml"
+        - "{{ env \"HOME\" }}/app.conf"
 ```
 
 #### Requirements
@@ -142,21 +159,29 @@ Available options:
 
 - `allow_networking`: When set to `false`, blocks all network access using `net none`
 - `allow_user_folders`: When set to `false`, restricts access to common user folders like Documents, Desktop, etc.
-- `allow_read_folders`: List of directories to explicitly allow read access to, even when other restrictions
-  are in place. Items in this list can use Golang template replacements (using the tool parameters).
+- `allow_read_folders`: List of directories to explicitly allow read access to. Items in this list can use
+  Golang template replacements (using the tool parameters).
+- `allow_read_files`: List of specific files to explicitly allow read access to. Items in this list can use
+  Golang template replacements (using the tool parameters).
 - `allow_write_folders`: List of directories to explicitly allow both read and write access to.
   Items in this list can use Golang template replacements (using the tool parameters).
+- `allow_write_files`: List of specific files to explicitly allow both read and write access to.
+  Items in this list can use Golang template replacements (using the tool parameters).
 - `custom_profile`: Specify a custom firejail profile for advanced configuration
+
+**Note**: For consistency with the sandbox-exec runner, firejail also supports separate file and folder lists.
+While firejail uses `whitelist` for both, maintaining this separation improves configuration clarity and
+cross-platform compatibility.
 
 #### Security Benefits
 
 The firejail runner adds several layers of security:
 
 1. **Filesystem isolation**: Restricts access to sensitive directories
-2. **Network restrictions**: Can completely disable network access
-3. **System call filtering**: Uses seccomp-bpf to restrict available system calls
-4. **Capabilities restrictions**: Drops dangerous capabilities
-5. **No root access**: Prevents elevation to root privileges
+1. **Network restrictions**: Can completely disable network access
+1. **System call filtering**: Uses seccomp-bpf to restrict available system calls
+1. **Capabilities restrictions**: Drops dangerous capabilities
+1. **No root access**: Prevents elevation to root privileges
 
 #### Custom Firejail Profiles
 
@@ -217,7 +242,7 @@ Available options:
 - `docker_run_opts`: String of additional options to pass to the `docker run` command
 - `prepare_command`: Commands to run before the main command (e.g., for installing packages or setting up the environment)
 - `memory`: Memory limit for the container (e.g., "512m", "1g")
-- `memory_reservation`: Memory soft limit (e.g., "256m", "512m") 
+- `memory_reservation`: Memory soft limit (e.g., "256m", "512m")
 - `memory_swap`: Swap limit equal to memory plus swap: '-1' to enable unlimited swap
 - `memory_swappiness`: Tune container memory swappiness (0 to 100, default -1)
 - `cap_add`: Linux capabilities to add to the container (e.g., ["NET_ADMIN", "SYS_PTRACE"])
@@ -231,11 +256,11 @@ Available options:
 The Docker runner provides several security advantages:
 
 1. **Complete process isolation**: Processes inside the container are isolated from the host
-2. **Configurable resource limits**: Can limit CPU, memory, and other resources
-3. **Control over capabilities**: Docker restricts Linux capabilities by default
-4. **Filesystem isolation**: Only mounted volumes are accessible
-5. **Network isolation**: Can completely disable network access
-6. **User namespace separation**: Can run as non-root inside the container
+1. **Configurable resource limits**: Can limit CPU, memory, and other resources
+1. **Control over capabilities**: Docker restricts Linux capabilities by default
+1. **Filesystem isolation**: Only mounted volumes are accessible
+1. **Network isolation**: Can completely disable network access
+1. **User namespace separation**: Can run as non-root inside the container
 
 #### Docker Runner Examples
 
@@ -414,15 +439,57 @@ Here's a complete example of a tool that uses different runners based on the pla
           allow_user_folders: false
           allow_read_folders:
             - "/tmp"
-            - "{{ .filename }}"
+          allow_read_files:
+            - "{{ .filename }}"                           # Specific file access
       - name: firejail
         options:
           allow_networking: false
           allow_user_folders: false
           allow_read_folders:
             - "/tmp"
-            - "{{ .filename }}"
+          allow_read_files:
+            - "{{ .filename }}"                           # Specific file access
       - name: exec
   output:
     prefix: "Contents of {{ .filename }}:"
-``` 
+```
+
+### Additional Example: Kubernetes Tool
+
+Here's an example showing how to properly configure file and folder access for kubectl:
+
+```yaml
+- name: "kubectl_get"
+  description: "List Kubernetes resources"
+  params:
+    resource:
+      type: string
+      description: "Resource type (pods, deployments, etc.)"
+      required: true
+  run:
+    command: "kubectl get {{ .resource }}"
+    env:
+      - KUBECONFIG
+    runners:
+      - name: sandbox-exec
+        options:
+          allow_networking: true
+          allow_user_folders: false
+          allow_read_folders:
+            - "/usr/bin"
+            - "/bin"
+            - "{{ env \"HOME\" }}/.kube"                  # Directory with multiple kubeconfig files
+          allow_read_files:
+            - "{{ env \"KUBECONFIG\" }}"                  # Specific kubeconfig file
+      - name: firejail
+        options:
+          allow_networking: true
+          allow_user_folders: false
+          allow_read_folders:
+            - "/usr/bin"
+            - "/bin"
+            - "{{ env \"HOME\" }}/.kube"
+          allow_read_files:
+            - "{{ env \"KUBECONFIG\" }}"
+      - name: exec
+```

@@ -179,3 +179,80 @@ func TestPromptsConfig(t *testing.T) {
 		t.Errorf("Expected 'Single system prompt', got '%s'", singlePrompt.GetSystemPrompts())
 	}
 }
+
+func TestGetOrchestratorAndToolRunnerModels(t *testing.T) {
+	// Test with role-based configuration
+	config := Config{
+		Agent: AgentConfigFile{
+			Orchestrator: &ModelConfig{
+				Model: "gpt-4o",
+				Class: "openai",
+				Name:  "orchestrator",
+			},
+			ToolRunner: &ModelConfig{
+				Model: "gpt-4o-mini",
+				Class: "openai",
+				Name:  "tool-runner",
+			},
+		},
+	}
+
+	orchestrator := config.GetOrchestratorModel()
+	if orchestrator == nil {
+		t.Fatal("Expected orchestrator model, got nil")
+	}
+	if orchestrator.Model != "gpt-4o" {
+		t.Errorf("Expected orchestrator model 'gpt-4o', got '%s'", orchestrator.Model)
+	}
+
+	toolRunner := config.GetToolRunnerModel()
+	if toolRunner == nil {
+		t.Fatal("Expected tool-runner model, got nil")
+	}
+	if toolRunner.Model != "gpt-4o-mini" {
+		t.Errorf("Expected tool-runner model 'gpt-4o-mini', got '%s'", toolRunner.Model)
+	}
+
+	// Test with legacy flat model list
+	legacyConfig := Config{
+		Agent: AgentConfigFile{
+			Models: []ModelConfig{
+				{
+					Model:   "gpt-4",
+					Class:   "openai",
+					Name:    "default",
+					Default: true,
+				},
+			},
+		},
+	}
+
+	legacyOrchestrator := legacyConfig.GetOrchestratorModel()
+	if legacyOrchestrator == nil {
+		t.Fatal("Expected orchestrator model from legacy config, got nil")
+	}
+	if legacyOrchestrator.Model != "gpt-4" {
+		t.Errorf("Expected orchestrator model 'gpt-4', got '%s'", legacyOrchestrator.Model)
+	}
+
+	legacyToolRunner := legacyConfig.GetToolRunnerModel()
+	if legacyToolRunner == nil {
+		t.Fatal("Expected tool-runner model from legacy config, got nil")
+	}
+	// Tool runner should fall back to orchestrator
+	if legacyToolRunner.Model != "gpt-4" {
+		t.Errorf("Expected tool-runner to fall back to 'gpt-4', got '%s'", legacyToolRunner.Model)
+	}
+
+	// Test with empty config
+	emptyConfig := Config{}
+	emptyOrchestrator := emptyConfig.GetOrchestratorModel()
+	if emptyOrchestrator != nil {
+		t.Error("Expected nil orchestrator for empty config")
+	}
+
+	emptyToolRunner := emptyConfig.GetToolRunnerModel()
+	if emptyToolRunner != nil {
+		t.Error("Expected nil tool-runner for empty config")
+	}
+}

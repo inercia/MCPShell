@@ -120,9 +120,9 @@ mcpshell agent --tools=examples/config.yaml \
 Settings are resolved in the following order (highest to lowest precedence):
 
 1. Command-line flags
-2. Configuration file settings
-3. Environment variables
-4. Default values
+1. Configuration file settings
+1. Environment variables
+1. Default values
 
 ## Configuration Management Commands
 

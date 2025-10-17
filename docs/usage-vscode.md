@@ -31,7 +31,7 @@ To use MCPShell with Visual Studio Code, follow these steps:
            command: "curl -s 'https://wttr.in/{{ .location }}?format=3'"
    ```
 
-2. **Configure VS Code to use the MCPShell** by creating a `.vscode/mcp.json` file in your workspace:
+1. **Configure VS Code to use the MCPShell** by creating a `.vscode/mcp.json` file in your workspace:
 
    ```json
    {
@@ -66,7 +66,7 @@ To use MCPShell with Visual Studio Code, follow these steps:
 
    Note: You can use predefined VS Code variables like `${workspaceFolder}` in your configuration.
 
-3. **Restart VS Code** or run the **MCP: List Servers** command from the Command Palette to start the server.
+1. **Restart VS Code** or run the **MCP: List Servers** command from the Command Palette to start the server.
 
 ## Using Multiple MCPShell Instances
 
@@ -137,9 +137,9 @@ VS Code will prompt for these values when the server starts for the first time a
 After configuring the MCPShell:
 
 1. Open the **Chat** view (⌃⌘I on macOS, Ctrl+Alt+I on Windows/Linux)
-2. Select **Agent** mode from the dropdown
-3. Click the **Tools** button to view and select available tools
-4. Enter your query in the chat input box
+1. Select **Agent** mode from the dropdown
+1. Click the **Tools** button to view and select available tools
+1. Enter your query in the chat input box
 
 When a tool is invoked, you'll need to confirm the action before it runs. You can choose to automatically confirm the specific tool for the current session, workspace, or all future invocations.
 
@@ -148,17 +148,17 @@ When a tool is invoked, you'll need to confirm the action before it runs. You ca
 To manage your MCP servers:
 
 1. Run the **MCP: List Servers** command from the Command Palette
-2. Select a server to start, stop, restart, view configuration, or view server logs
+1. Select a server to start, stop, restart, view configuration, or view server logs
 
 ## Troubleshooting
 
 If you're experiencing issues with the MCPShell in VS Code:
 
 1. **Check for error indicators** in the Chat view. Select the error notification and then **Show Output** to view server logs.
-2. **Verify paths**: Ensure all file paths in your configuration are correct.
-3. **Environment variables**: Make sure any required environment variables are properly set.
-4. **Permissions**: Verify that the MCPShell binary has execution permissions.
-5. **Connection type**: Ensure the server connection type (`type: "stdio"`) is correctly specified.
+1. **Verify paths**: Ensure all file paths in your configuration are correct.
+1. **Environment variables**: Make sure any required environment variables are properly set.
+1. **Permissions**: Verify that the MCPShell binary has execution permissions.
+1. **Connection type**: Ensure the server connection type (`type: "stdio"`) is correctly specified.
 
 ## Security Considerations
 
@@ -167,4 +167,4 @@ When using MCPShell with VS Code, be aware of the following security considerati
 - The tools you configure have the same system access permissions as VS Code.
 - Be careful with tools that execute shell commands or access sensitive files.
 - Use constraints to limit what your tools can do, especially when executing commands.
-- Consider running VS Code with restricted permissions when using powerful tools. 
+- Consider running VS Code with restricted permissions when using powerful tools.

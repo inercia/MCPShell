@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/inercia/MCPShell/pkg/common"
 )
@@ -23,8 +24,8 @@ import (
 //   - An error if command execution fails
 func (h *CommandHandler) executeToolCommand(ctx context.Context, params map[string]interface{}, extraRunnerOpts map[string]interface{}) (string, []string, error) {
 	// Log the tool execution
-	h.logger.Info("Tool execution requested for '%s'", h.toolName)
-	h.logger.Info("Arguments: %v", params)
+	h.logger.Debug("Tool execution requested for '%s'", h.toolName)
+	h.logger.Debug("Arguments: %v", params)
 
 	// Apply default values for parameters that aren't provided but have defaults
 	for paramName, paramConfig := range h.params {
@@ -88,8 +89,8 @@ func (h *CommandHandler) executeToolCommand(ctx context.Context, params map[stri
 	// Prepare environment variables
 	env := h.getEnvironmentVariables(params)
 
-	h.logger.Info("Executing command:")
-	h.logger.Info("\n------------------------------------------------------\n%s\n------------------------------------------------------\n", cmd)
+	h.logger.Debug("Executing command:")
+	h.logger.Debug("\n------------------------------------------------------\n%s\n------------------------------------------------------\n", cmd)
 
 	// Determine which runner to use based on the configuration
 	runnerType := RunnerTypeExec // default runner
@@ -183,8 +184,12 @@ func (h *CommandHandler) ExecuteCommand(params map[string]interface{}) (string, 
 		params = tmpParams
 	}
 
+	// Create context with timeout for command execution
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+
 	// Use the common implementation
-	output, failedConstraints, err := h.executeToolCommand(context.Background(), params, runnerOpts)
+	output, failedConstraints, err := h.executeToolCommand(ctx, params, runnerOpts)
 
 	// If constraints failed, format the error message
 	if err != nil && len(failedConstraints) > 0 {

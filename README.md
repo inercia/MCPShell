@@ -4,7 +4,6 @@
   <img src="docs/logo.png" alt="banner" width="300"/>
 </p>
 
-
 The **MCPShell** is a tool that allows LLMs to safely execute **command-line tools**
 through the [**Model Context Protocol (MCP)**](https://modelcontextprotocol.io/).
 It provides a secure bridge between LLMs and operating system commands.
@@ -66,7 +65,7 @@ space problems in your hard disk.
    [kubectl](examples/kubectl-ro.yaml)?
    Or let it run some [AWS CLI](examples/aws-networking-ro.yaml) commands?
 
-2. Configure the MCP server in Cursor (or in any other LLM client with support for MCP)
+1. Configure the MCP server in Cursor (or in any other LLM client with support for MCP)
 
    For example, for Cursor, create `.cursor/mcp.json`:
 
@@ -87,7 +86,7 @@ space problems in your hard disk.
    ```
 
    You can also use relative paths and omit the `.yaml` extension:
-   
+
    ```json
    {
        "mcpServers": {
@@ -102,16 +101,17 @@ space problems in your hard disk.
        }
    }
    ```
-   
+
    This will look for `example.yaml` in the tools directory (`~/.mcpshell/tools/` by default).
 
    See more details on how to configure [Cursor](docs/usage-cursor.md) or
    [Visual Studio Code](docs/usage-vscode.md). Other LLMs with support for MCPs
    should be configured in a similar way.
 
-3. Make sure your MCP client is refreshed (Cursor should recognize it automatically the
+1. Make sure your MCP client is refreshed (Cursor should recognize it automatically the
    firt time, but any change in the config file will require a refresh).
-4. Ask your LLM some questions it should be able to answer with the new tool. For example:
+
+1. Ask your LLM some questions it should be able to answer with the new tool. For example:
    _"I'm running out of space in my hard disk. Could you help me finding the problem?"_.
 
 ## Usage and Configuration

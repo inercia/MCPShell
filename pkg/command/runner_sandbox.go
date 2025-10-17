@@ -10,6 +10,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"text/template"
@@ -34,6 +35,8 @@ type RunnerSandboxExecOptions struct {
 	AllowUserFolders  bool     `json:"allow_user_folders"`
 	AllowReadFolders  []string `json:"allow_read_folders"`
 	AllowWriteFolders []string `json:"allow_write_folders"`
+	AllowReadFiles    []string `json:"allow_read_files"`
+	AllowWriteFiles   []string `json:"allow_write_files"`
 	CustomProfile     string   `json:"custom_profile"`
 }
 
@@ -93,12 +96,40 @@ func (r *RunnerSandboxExec) Run(ctx context.Context, shell string, command strin
 		// Continue execution
 	}
 
-	// replace template variables in allow read and write folders
+	// replace template variables in allow read and write folders and files
 	if len(r.options.AllowReadFolders) > 0 {
 		r.options.AllowReadFolders = common.ProcessTemplateListFlexible(r.options.AllowReadFolders, params)
 	}
 	if len(r.options.AllowWriteFolders) > 0 {
 		r.options.AllowWriteFolders = common.ProcessTemplateListFlexible(r.options.AllowWriteFolders, params)
+	}
+	if len(r.options.AllowReadFiles) > 0 {
+		r.options.AllowReadFiles = common.ProcessTemplateListFlexible(r.options.AllowReadFiles, params)
+
+		// For macOS sandbox, we need to allow read access to parent directories
+		// of files to enable directory traversal
+		for _, filePath := range r.options.AllowReadFiles {
+			dir := filepath.Dir(filePath)
+			// Add parent directory if not already in the list
+			if !contains(r.options.AllowReadFolders, dir) {
+				r.options.AllowReadFolders = append(r.options.AllowReadFolders, dir)
+				r.logger.Printf("[DEBUG] Added parent directory to allow list: %s", dir)
+			}
+		}
+	}
+	if len(r.options.AllowWriteFiles) > 0 {
+		r.options.AllowWriteFiles = common.ProcessTemplateListFlexible(r.options.AllowWriteFiles, params)
+
+		// For macOS sandbox, we need to allow write access to parent directories
+		// of files to enable directory traversal
+		for _, filePath := range r.options.AllowWriteFiles {
+			dir := filepath.Dir(filePath)
+			// Add parent directory if not already in the list
+			if !contains(r.options.AllowWriteFolders, dir) {
+				r.options.AllowWriteFolders = append(r.options.AllowWriteFolders, dir)
+				r.logger.Printf("[DEBUG] Added parent directory to allow list: %s", dir)
+			}
+		}
 	}
 
 	// Generate the profile by rendering the template
@@ -145,7 +176,7 @@ func (r *RunnerSandboxExec) Run(ctx context.Context, shell string, command strin
 	// Check if we can optimize by running a single executable directly
 	if isSingleExecutableCommand(fullCmd) {
 		r.logger.Printf("Optimization: running single executable command directly: %s", fullCmd)
-		execCmd = exec.Command("sandbox-exec", "-f", profileFile.Name(), fullCmd)
+		execCmd = exec.CommandContext(ctx, "sandbox-exec", "-f", profileFile.Name(), fullCmd)
 	} else {
 		// Create a temporary file for the command
 		tmpScript, err := os.CreateTemp("", "sandbox-script-*.sh")
@@ -182,15 +213,7 @@ func (r *RunnerSandboxExec) Run(ctx context.Context, shell string, command strin
 			return "", fmt.Errorf("failed to make temporary file executable: %w", err)
 		}
 
-		execCmd = exec.Command("sandbox-exec", "-f", profileFile.Name(), tmpScript.Name())
-	}
-
-	// Check if context is done
-	select {
-	case <-ctx.Done():
-		return "", ctx.Err()
-	default:
-		// Continue execution
+		execCmd = exec.CommandContext(ctx, "sandbox-exec", "-f", profileFile.Name(), tmpScript.Name())
 	}
 
 	r.logger.Printf("Created command: %s", execCmd.String())
@@ -249,4 +272,14 @@ func (r *RunnerSandboxExec) CheckImplicitRequirements() error {
 	}
 
 	return nil
+}
+
+// contains checks if a string slice contains a specific string
+func contains(slice []string, item string) bool {
+	for _, s := range slice {
+		if s == item {
+			return true
+		}
+	}
+	return false
 }

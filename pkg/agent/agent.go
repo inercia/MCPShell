@@ -8,11 +8,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strings"
 	"time"
 
-	"github.com/sashabaranov/go-openai"
-
+	"github.com/docker/cagent/pkg/runtime"
+	"github.com/fatih/color"
 	"github.com/inercia/MCPShell/pkg/common"
 	"github.com/inercia/MCPShell/pkg/server"
 )
@@ -58,13 +57,13 @@ func (a *Agent) Validate() error {
 	return nil
 }
 
-// Run executes the agent
+// Run executes the agent using cagent multi-agent framework
 func (a *Agent) Run(ctx context.Context, userInput chan string, agentOutput chan string) error {
 	// Setup panic handler
 	defer common.RecoverPanic()
 	defer close(agentOutput) // Ensure agentOutput is closed when Run exits
 
-	// Create server instance
+	// Create server instance for MCP tools
 	srv, cleanup, err := a.setupServer(ctx)
 	if err != nil {
 		agentOutput <- fmt.Sprintf("Error: %v", err)
@@ -72,106 +71,187 @@ func (a *Agent) Run(ctx context.Context, userInput chan string, agentOutput chan
 	}
 	defer cleanup() // Ensure cleanup is called
 
-	// Initialize model client
-	client, err := a.initializeModelClient()
+	// Load agent configuration to get orchestrator and tool-runner models
+	config, err := GetConfig()
 	if err != nil {
-		agentOutput <- fmt.Sprintf("Error: %v", err)
-		return err
+		a.logger.Error("Failed to load agent config: %v", err)
+		agentOutput <- fmt.Sprintf("Error: Failed to load agent config: %v", err)
+		return fmt.Errorf("failed to load agent config: %w", err)
 	}
 
-	// Convert MCP tools to OpenAI tools
-	openaiTools, err := srv.GetOpenAITools()
-	if err != nil {
-		a.logger.Error("Failed to convert MCP tools to OpenAI format: %v", err)
-		agentOutput <- fmt.Sprintf("Error: Failed to convert MCP tools to OpenAI format: %v", err)
-		return fmt.Errorf("failed to convert MCP tools to OpenAI format: %w", err)
+	// Get model configurations for orchestrator and tool-runner
+	orchestratorConfig := a.config.ModelConfig
+	if cfgOrch := config.GetOrchestratorModel(); cfgOrch != nil {
+		// Merge config file settings with command-line overrides
+		orchestratorConfig = mergeModelConfig(*cfgOrch, a.config.ModelConfig)
 	}
-	a.logger.Info("Retrieved %d tools from MCP server", len(openaiTools))
 
-	// Setup conversation
-	messages := a.setupConversation()
+	toolRunnerConfig := orchestratorConfig // Default to same as orchestrator
+	if cfgTool := config.GetToolRunnerModel(); cfgTool != nil {
+		// Merge config file settings with command-line overrides for tool runner
+		toolRunnerConfig = mergeModelConfig(*cfgTool, a.config.ModelConfig)
+	}
+
+	a.logger.Info("Orchestrator model: %s (%s)", orchestratorConfig.Model, orchestratorConfig.Class)
+	a.logger.Info("Tool-runner model: %s (%s)", toolRunnerConfig.Model, toolRunnerConfig.Class)
 
 	// Create a single-run context if in --once mode
 	if a.config.Once {
 		// Create a context with a timeout to ensure we don't get stuck in --once mode
-		singleRunCtx, singleRunCancel := context.WithTimeout(ctx, 30*time.Second)
+		singleRunCtx, singleRunCancel := context.WithTimeout(ctx, 120*time.Second)
 		defer singleRunCancel()
 		ctx = singleRunCtx
-		a.logger.Info("Running in one-shot mode with 30s safety timeout")
+		a.logger.Info("Running in one-shot mode with 120s safety timeout")
 	}
 
-	// Main interaction loop
-	for {
-		// Get response from the model
-		resp, err := a.callLLM(ctx, client, messages, openaiTools)
-		if err != nil {
-			agentOutput <- fmt.Sprintf("Error: %v", err)
-			return err
+	// Create cagent runtime with multi-agent system
+	cagentRT, err := CreateCagentRuntime(ctx, srv, orchestratorConfig, toolRunnerConfig, a.config.UserPrompt, a.logger)
+	if err != nil {
+		a.logger.Error("Failed to create cagent runtime: %v", err)
+		agentOutput <- fmt.Sprintf("Error: Failed to create cagent runtime: %v", err)
+		return fmt.Errorf("failed to create cagent runtime: %w", err)
+	}
+
+	// Start streaming events from cagent
+	a.logger.Info("Starting cagent event stream")
+	events := cagentRT.RunStream(ctx)
+
+	// Process events and send output
+	eventCount := 0
+	for event := range events {
+		eventCount++
+		a.logger.Debug("Received event #%d: %T", eventCount, event)
+
+		// Handle tool call confirmations - auto-approve tools
+		if _, ok := event.(*runtime.ToolCallConfirmationEvent); ok {
+			a.logger.Debug("Auto-approving tool execution")
+			cagentRT.Runtime().Resume(ctx, "approve-session")
 		}
 
-		// Process the response - first, check if we have any choices
-		if len(resp.Choices) == 0 {
-			a.logger.Error("No choices received from LLM")
-			agentOutput <- "Error: No response from LLM."
-			return fmt.Errorf("no choices received from LLM")
+		if err := a.handleCagentEvent(event, agentOutput); err != nil {
+			a.logger.Error("Error handling event: %v", err)
+			// Continue processing other events
+		}
+	}
+	a.logger.Info("Event stream completed, processed %d events", eventCount)
+
+	a.logger.Info("Cagent runtime completed")
+
+	// In one-shot mode, close the userInput channel
+	if a.config.Once {
+		close(userInput)
+	}
+
+	return nil
+}
+
+// handleCagentEvent processes a single cagent event and sends appropriate output
+func (a *Agent) handleCagentEvent(event interface{}, agentOutput chan string) error {
+	a.logger.Debug("Handling event type: %T", event)
+
+	// Define color schemes for different outputs
+	cyan := color.New(color.FgCyan)
+	green := color.New(color.FgGreen)     // Agent thinking/responses
+	blue := color.New(color.FgBlue)       // Tool results
+	yellow := color.New(color.FgYellow)   // Tool calls
+	magenta := color.New(color.FgMagenta) // Agent status
+
+	// Use concrete types from cagent runtime package
+	switch e := event.(type) {
+	case *runtime.AgentChoiceEvent:
+		// Agent is thinking/responding with text - stream in green
+		if e.Content != "" {
+			// Send colored content to distinguish agent text from system messages
+			agentOutput <- green.Sprint(e.Content)
 		}
 
-		// Get the response message
-		respMsg := resp.Choices[0].Message
-		messages = append(messages, respMsg)
+	case *runtime.PartialToolCallEvent:
+		// Tool call is being built incrementally - accumulate or just log
+		a.logger.Debug("Building tool call: %s", e.ToolCall.Function.Name)
 
-		// Check for tool calls
-		if len(respMsg.ToolCalls) > 0 {
-			// Process tool calls
-			if respMsg.Content != "" {
-				agentOutput <- fmt.Sprintf("Assistant: %s", respMsg.Content)
-			}
-
-			// Execute the tool calls
-			toolMessages := a.executeToolCalls(ctx, srv, respMsg.ToolCalls, agentOutput)
-			messages = append(messages, toolMessages...)
+	case *runtime.ToolCallEvent:
+		// Complete tool call is ready - use yellow for tool calls
+		toolName := e.ToolCall.Function.Name
+		var args map[string]interface{}
+		if err := json.Unmarshal([]byte(e.ToolCall.Function.Arguments), &args); err == nil {
+			argsJSON, _ := json.MarshalIndent(args, "", "  ")
+			agentOutput <- fmt.Sprintf("\n%s\n%s\n",
+				yellow.Sprintf("→ [%s] Calling tool '%s' with args:", e.AgentName, toolName),
+				cyan.Sprint(string(argsJSON)))
 		} else {
-			// No tool calls, just print the message
-			agentOutput <- fmt.Sprintf("Assistant: %s", respMsg.Content)
-
-			// Check for termination request from LLM
-			if strings.Contains(strings.ToUpper(respMsg.Content), "TERMINATE") {
-				a.logger.Info("LLM requested termination, ending the conversation")
-				agentOutput <- "Conversation terminated."
-				return nil
-			}
+			agentOutput <- fmt.Sprintf("\n%s\n", yellow.Sprintf("→ [%s] Calling tool '%s'", e.AgentName, toolName))
 		}
 
-		// Exit after first response if in one-shot mode
-		if a.config.Once {
-			a.logger.Info("One-shot mode enabled, ending after first interaction")
-			agentOutput <- "One-shot mode: Completed."
+	case *runtime.ToolCallConfirmationEvent:
+		// Tool is being confirmed/executed
+		a.logger.Debug("Tool call confirmed for agent: %s", e.AgentName)
 
-			// Since we skipped creating the stdin reader goroutine in cmd/agent.go,
-			// we need to close the userInput channel here in one-shot mode
-			close(userInput)
+	case *runtime.ToolCallResponseEvent:
+		// Tool execution result - use blue for tool output
+		response := e.Response
+		if len(response) > 1000 {
+			response = response[:1000] + "... (truncated)"
+		}
+		agentOutput <- fmt.Sprintf("%s\n%s\n",
+			blue.Sprint("✓ Tool result:"),
+			response)
 
-			return nil
+	case *runtime.StreamStartedEvent:
+		// Agent started processing - use magenta for agent status
+		agentOutput <- fmt.Sprintf("\n%s\n\n", magenta.Sprintf("[%s started]", e.AgentName))
+
+	case *runtime.StreamStoppedEvent:
+		// Agent finished processing - use magenta for agent status
+		// Add newlines before the completion message to ensure separation from streamed text
+		agentOutput <- fmt.Sprintf("\n\n%s\n\n", magenta.Sprintf("[%s completed]", e.AgentName))
+		a.logger.Debug("Agent %s stream stopped", e.AgentName)
+
+	case *runtime.UserMessageEvent:
+		// User message being processed
+		a.logger.Debug("Processing user message")
+
+	case *runtime.TokenUsageEvent:
+		// Token usage info
+		if e.Usage != nil {
+			a.logger.Debug("Token usage: input=%d, output=%d", e.Usage.InputTokens, e.Usage.OutputTokens)
 		}
 
-		// Get user input for the next interaction (skipped in one-shot mode)
-		agentOutput <- "\nYou: "
-		select {
-		case <-ctx.Done():
-			a.logger.Info("Context cancelled, terminating agent Run loop.")
-			return ctx.Err()
-		case input, ok := <-userInput:
-			if !ok {
-				a.logger.Info("User input channel closed, terminating conversation.")
-				agentOutput <- "User input closed. Conversation terminated."
-				return nil
-			}
-			messages = append(messages, openai.ChatCompletionMessage{
-				Role:    openai.ChatMessageRoleUser,
-				Content: input,
-			})
+	default:
+		// Unknown event type
+		a.logger.Debug("Unhandled event type: %T", event)
+	}
+
+	return nil
+}
+
+// mergeModelConfig merges a base configuration with override values
+// Override values (from command-line) take precedence over base values (from config file)
+func mergeModelConfig(base, override ModelConfig) ModelConfig {
+	result := base
+
+	// Override specific fields if they were set via command-line
+	if override.Model != "" {
+		result.Model = override.Model
+	}
+	if override.Class != "" {
+		result.Class = override.Class
+	}
+	if override.APIKey != "" {
+		result.APIKey = override.APIKey
+	}
+	if override.APIURL != "" {
+		result.APIURL = override.APIURL
+	}
+	// Merge prompts - command-line prompts are added to config file prompts
+	if override.Prompts.HasSystemPrompts() {
+		if result.Prompts.System == nil {
+			result.Prompts.System = override.Prompts.System
+		} else {
+			result.Prompts.System = append(result.Prompts.System, override.Prompts.System...)
 		}
 	}
+
+	return result
 }
 
 // setupServer initializes and creates the MCP server
@@ -195,146 +275,4 @@ func (a *Agent) setupServer(ctx context.Context) (*server.Server, func(), error)
 	}
 
 	return srv, cleanup, nil
-}
-
-// initializeModelClient creates and configures the appropriate model client using the model manager
-func (a *Agent) initializeModelClient() (*openai.Client, error) {
-	client, err := InitializeModelClient(a.config.ModelConfig, a.logger)
-	if err != nil {
-		a.logger.Error("Failed to initialize model client: %v", err)
-		return nil, fmt.Errorf("failed to initialize model client: %w", err)
-	}
-	return client, nil
-}
-
-// setupConversation prepares the initial conversation messages and system prompt
-func (a *Agent) setupConversation() []openai.ChatCompletionMessage {
-	// Add termination instructions to the system prompt
-	systemPrompt := a.config.Prompts.GetSystemPrompts()
-	if systemPrompt == "" {
-		a.logger.Info("No system prompt configured, using default")
-		systemPrompt = "You are a helpful assistant."
-	} else {
-		a.logger.Info("Using system prompt from config")
-	}
-
-	if !strings.Contains(systemPrompt, "terminate the conversation") {
-		systemPrompt += "\n\nWhen you have completed your task, please type 'TERMINATE' to end the conversation."
-	}
-
-	// Start the conversation
-	messages := []openai.ChatCompletionMessage{
-		{
-			Role:    openai.ChatMessageRoleSystem,
-			Content: systemPrompt,
-		},
-	}
-
-	// Add user prompt if provided from command line
-	if a.config.UserPrompt != "" {
-		messages = append(messages, openai.ChatCompletionMessage{
-			Role:    openai.ChatMessageRoleUser,
-			Content: a.config.UserPrompt,
-		})
-	}
-	// Note: User prompts from agent config file are ignored
-
-	return messages
-}
-
-// executeToolCalls processes and executes tool calls from the LLM response
-func (a *Agent) executeToolCalls(ctx context.Context, srv *server.Server, toolCalls []openai.ToolCall, agentOutput chan string) []openai.ChatCompletionMessage {
-	var toolMessages []openai.ChatCompletionMessage
-
-	// Process each tool call
-	for _, call := range toolCalls {
-		a.logger.Info("Processing tool call: %s", call.Function.Name)
-		a.logger.Debug("Raw tool arguments: %s", call.Function.Arguments)
-
-		// Parse the arguments
-		var args map[string]interface{}
-		if err := json.Unmarshal([]byte(call.Function.Arguments), &args); err != nil {
-			a.logger.Error("Failed to parse tool arguments: %v", err)
-			toolResultContent := fmt.Sprintf("Error: Failed to parse arguments - %v", err)
-			toolResultMsg := openai.ChatCompletionMessage{
-				Role:       openai.ChatMessageRoleTool,
-				Content:    toolResultContent,
-				ToolCallID: call.ID,
-			}
-			toolMessages = append(toolMessages, toolResultMsg)
-			agentOutput <- fmt.Sprintf("Tool %s error: Failed to parse arguments", call.Function.Name)
-			continue
-		}
-
-		// Log the parsed arguments
-		argsJSON, _ := json.MarshalIndent(args, "", "  ")
-		a.logger.Debug("Parsed tool arguments: %s", string(argsJSON))
-
-		// Convert non-string arguments to strings
-		for key, value := range args {
-			if _, ok := value.(string); !ok && value != nil {
-				args[key] = fmt.Sprintf("%v", value)
-			}
-		}
-
-		// Execute the tool
-		toolResult, err := srv.ExecuteTool(ctx, call.Function.Name, args)
-		if err != nil {
-			a.logger.Error("Failed to execute tool '%s': %v", call.Function.Name, err)
-			errorContent := fmt.Sprintf("Error: %v", err)
-			toolResultMsg := openai.ChatCompletionMessage{
-				Role:       openai.ChatMessageRoleTool,
-				Content:    errorContent,
-				ToolCallID: call.ID,
-			}
-			toolMessages = append(toolMessages, toolResultMsg)
-			agentOutput <- fmt.Sprintf("Tool %s error: %v", call.Function.Name, err)
-			continue
-		}
-
-		// Add the result
-		toolResultMsg := openai.ChatCompletionMessage{
-			Role:       openai.ChatMessageRoleTool,
-			Content:    toolResult,
-			ToolCallID: call.ID,
-		}
-		toolMessages = append(toolMessages, toolResultMsg)
-		agentOutput <- fmt.Sprintf("Tool %s result: %s", call.Function.Name, toolResult)
-	}
-
-	return toolMessages
-}
-
-// callLLM makes a chat completion call to the LLM with context cancellation support
-func (a *Agent) callLLM(ctx context.Context, client *openai.Client, messages []openai.ChatCompletionMessage, openaiTools []openai.Tool) (openai.ChatCompletionResponse, error) {
-	// Create the chat completion request
-	req := openai.ChatCompletionRequest{
-		Model:    a.config.Model,
-		Messages: messages,
-		Tools:    openaiTools,
-	}
-
-	// Get response from the model
-	var resp openai.ChatCompletionResponse
-	var llmErr error
-
-	// Perform LLM call in a separate goroutine to allow context cancellation
-	done := make(chan struct{})
-	go func() {
-		defer close(done)
-		resp, llmErr = client.CreateChatCompletion(ctx, req)
-	}()
-
-	select {
-	case <-ctx.Done():
-		a.logger.Info("Context cancelled, terminating LLM call.")
-		return openai.ChatCompletionResponse{}, ctx.Err()
-	case <-done:
-		if llmErr != nil {
-			a.logger.Error("Error getting LLM response: %v", llmErr)
-			return openai.ChatCompletionResponse{}, fmt.Errorf("error getting LLM response: %w", llmErr)
-		}
-	}
-
-	return resp, nil
 }

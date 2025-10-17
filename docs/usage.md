@@ -33,14 +33,15 @@ This is the list of argument that are common to all the commands:
   If an existing description is specified in the config file (and `--description-override` is not passed)
   it will append the description to the existing one. If it is specified multiple times, the
   resulting description with be the join of all of them
-- `--description-file`: Read the description from files (optional, can be specified multiple times).   
-  Shell globbing is supported (e.g., `--description-file *.md`). URLs are also supported (e.g., 
+- `--description-file`: Read the description from files (optional, can be specified multiple times).\
+  Shell globbing is supported (e.g., `--description-file *.md`). URLs are also supported (e.g.,
   `--description-file https://example.com/description.txt`). It follows the same behaviour of
   `--description`, where the final description is the result of the concatenation of all of them
 
 ### Tools Directory
 
 MCPShell looks for tools files in a dedicated directory:
+
 - Default: `~/.mcpshell/tools/`
 - Override with: `MCPSHELL_TOOLS_DIR` environment variable
 
@@ -48,6 +49,7 @@ When using relative paths with `--tools`, the file is searched in this directory
 If no extension is provided, `.yaml` is automatically appended.
 
 Examples:
+
 ```console
 # Using a file in the tools directory (adds .yaml automatically)
 mcpshell mcp --tools mytools
@@ -58,7 +60,7 @@ mcpshell mcp --tools mytools.yaml
 # Using an absolute path
 mcpshell mcp --tools /path/to/your/tools.yaml
 ```
-  
+
 For example, imagine you want to use the [kubectl](../examples/kubectl-ro.yaml) toolkit,
 but you want to add some additional instructions specific to your infrastructure,
 you could do:
@@ -160,7 +162,7 @@ See [this document](usage-agent.md) for more details.
 
 MCPShell can be integrated with various IDEs and tools:
 
-- [Agent Usage Guide](usage-agent.md): Detailed guide for using MCPShell's agent functionality 
+- [Agent Usage Guide](usage-agent.md): Detailed guide for using MCPShell's agent functionality
 - [VSCode Integration](usage-vscode.md): Guide for integrating MCPShell with Visual Studio Code
 - [Cursor Integration](usage-cursor.md): Guide for integrating MCPShell with Cursor editor
 - [Codex CLI Integration](usage-codex-cli.md): Guide for integrating MCPShell with the Codex CLI
@@ -175,4 +177,4 @@ For information about configuring MCPShell, including defining tools, parameters
 
 ## Troubleshooting
 
-For help with common issues, see the [Troubleshooting Guide](troubleshooting.md). 
+For help with common issues, see the [Troubleshooting Guide](troubleshooting.md).

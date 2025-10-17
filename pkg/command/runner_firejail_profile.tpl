@@ -31,8 +31,19 @@ whitelist {{ . }}
 read-only {{ . }}
 {{ end }}
 
+# Allow specific read files
+{{ range .AllowReadFiles }}
+whitelist {{ . }}
+read-only {{ . }}
+{{ end }}
+
 # Allow specific write folders
 {{ range .AllowWriteFolders }}
+whitelist {{ . }}
+{{ end }}
+
+# Allow specific write files
+{{ range .AllowWriteFiles }}
 whitelist {{ . }}
 {{ end }}
 

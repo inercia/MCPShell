@@ -29,7 +29,11 @@ type ModelConfig struct {
 
 // AgentConfigFile holds the agent configuration from file
 type AgentConfigFile struct {
-	Models []ModelConfig `yaml:"models"`
+	Models []ModelConfig `yaml:"models"` // Legacy: flat list of models
+
+	// Role-based configuration for multi-agent system
+	Orchestrator *ModelConfig `yaml:"orchestrator,omitempty"` // Root agent that plans and orchestrates
+	ToolRunner   *ModelConfig `yaml:"tool-runner,omitempty"`  // Sub-agent that executes tools
 }
 
 // Config holds the complete agent configuration
@@ -88,6 +92,7 @@ func (c *Config) GetDefaultModel() *ModelConfig {
 // GetModelByName returns the model configuration with the specified name
 func (c *Config) GetModelByName(name string) *ModelConfig {
 	for i := range c.Agent.Models {
+		// Check both Name and Model fields
 		if c.Agent.Models[i].Name == name || c.Agent.Models[i].Model == name {
 			return &c.Agent.Models[i]
 		}
@@ -156,4 +161,24 @@ func GetDefaultConfig() (*Config, error) {
 // GetDefaultConfigYAML returns the embedded default configuration as a YAML string
 func GetDefaultConfigYAML() string {
 	return defaultConfigYAML
+}
+
+// GetOrchestratorModel returns the orchestrator model configuration
+// Falls back to default model if orchestrator is not specified
+func (c *Config) GetOrchestratorModel() *ModelConfig {
+	if c.Agent.Orchestrator != nil {
+		return c.Agent.Orchestrator
+	}
+	// Fall back to default model for backward compatibility
+	return c.GetDefaultModel()
+}
+
+// GetToolRunnerModel returns the tool-runner model configuration
+// Falls back to orchestrator model if tool-runner is not specified
+func (c *Config) GetToolRunnerModel() *ModelConfig {
+	if c.Agent.ToolRunner != nil {
+		return c.Agent.ToolRunner
+	}
+	// Fall back to orchestrator model (which may fall back to default)
+	return c.GetOrchestratorModel()
 }
