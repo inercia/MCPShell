@@ -104,7 +104,7 @@ func (h *CommandHandler) executeToolCommand(ctx context.Context, params map[stri
 		// Wrap the command with timeout
 		// Using timeout command which will kill the entire process group
 		// This works reliably on Unix/Linux/macOS systems
-		cmd = fmt.Sprintf("timeout --kill-after=1s %ds sh -c '%s'", timeoutSeconds, escapedCmd)
+		cmd = fmt.Sprintf("timeout --kill-after=5s %ds sh -c '%s'", timeoutSeconds, escapedCmd)
 		h.logger.Debug("Wrapped command with Unix timeout: %ds", timeoutSeconds)
 	} else if h.timeout != "" {
 		// timeout command not available (probably Windows)

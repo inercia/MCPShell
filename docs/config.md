@@ -205,7 +205,7 @@ The run configuration defines how the tool executes:
 
 - `command`: A shell command to execute (required)
 - `env`: A list of environment variable names to pass from the parent process to the command (optional)
-  - Environment variablees can be just names (ie, `KUBECONFIG`),
+  - Environment variables can be just names (ie, `KUBECONFIG`),
     assignments (ie, `KUBECONFIG=/some/path`) or event templated
     assignments (ie, `KUBECONFIG={{ .kubeconfig }}`).
 - `timeout`: Maximum duration for command execution (optional)
@@ -224,7 +224,7 @@ run:
   env:
     - KUBECONFIG     # Pass the KUBECONFIG environment variable to the command
     - HOME           # Pass the HOME environment variable to the command
-    - TESTS=false    # Pass some env variables wwith some values
+    - TESTS=false    # Pass some env variables with some values
   timeout: "30s"     # Timeout after 30 seconds
   command: |
     kubectl get {{ .resource }}
