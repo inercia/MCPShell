@@ -10,7 +10,9 @@ TEST_FILES=(
     "exe/test_exe.sh"
     "exe/test_exe_empty_file.sh"
     "exe/test_exe_constraints.sh"
+    "exe/test_exe_timeout.sh"
     "runners/test_runner_docker.sh"
+    "runners/test_runner_sandbox_exec.sh"
 )
 
 echo "==================================="

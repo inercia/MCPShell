@@ -31,6 +31,7 @@ mcp:
         - "output_format == '' || ['json', 'text', 'table'].exists(f, f == output_format)"  # Valid output formats
         - "profile == '' || profile.matches('^[a-zA-Z0-9_-]+$')"  # Valid profile name format
       run:
+        timeout: "60s"
         env:
           - HOME
           - AWS_PROFILE
@@ -92,6 +93,7 @@ mcp:
         - "output_format == '' || ['json', 'text', 'table'].exists(f, f == output_format)"  # Valid output formats
         - "profile == '' || profile.matches('^[a-zA-Z0-9_-]+$')"  # Valid profile name format
       run:
+        timeout: "60s"
         env:
           - HOME
           - AWS_PROFILE
@@ -175,6 +177,7 @@ mcp:
         - "output_format == '' || ['json', 'text', 'table'].exists(f, f == output_format)"  # Valid output formats
         - "profile == '' || profile.matches('^[a-zA-Z0-9_-]+$')"  # Valid profile name format
       run:
+        timeout: "60s"
         env:
           - HOME
           - AWS_PROFILE
@@ -299,6 +302,7 @@ mcp:
         - "output_format == '' || ['json', 'text', 'table'].exists(f, f == output_format)"  # Valid output formats
         - "profile == '' || profile.matches('^[a-zA-Z0-9_-]+$')"  # Valid profile name format
       run:
+        timeout: "60s"
         env:
           - HOME
           - AWS_PROFILE
@@ -390,6 +394,7 @@ mcp:
         - "output_format == '' || ['json', 'text', 'table'].exists(f, f == output_format)"  # Valid output formats
         - "profile == '' || profile.matches('^[a-zA-Z0-9_-]+$')"  # Valid profile name format
       run:
+        timeout: "60s"
         env:
           - HOME
           - AWS_PROFILE
@@ -515,6 +520,7 @@ mcp:
         - "output_format == '' || ['json', 'text', 'table'].exists(f, f == output_format)"  # Valid output formats
         - "profile == '' || profile.matches('^[a-zA-Z0-9_-]+$')"  # Valid profile name format
       run:
+        timeout: "60s"
         env:
           - HOME
           - AWS_PROFILE
@@ -570,6 +576,7 @@ mcp:
         - "output_format == '' || ['json', 'text', 'table'].exists(f, f == output_format)"  # Valid output formats
         - "profile == '' || profile.matches('^[a-zA-Z0-9_-]+$')"  # Valid profile name format
       run:
+        timeout: "60s"
         env:
           - HOME
           - AWS_PROFILE
@@ -622,6 +629,7 @@ mcp:
         - "output_format == '' || ['json', 'text', 'table'].exists(f, f == output_format)"  # Valid output formats
         - "profile == '' || profile.matches('^[a-zA-Z0-9_-]+$')"  # Valid profile name format
       run:
+        timeout: "60s"
         env:
           - HOME
           - AWS_PROFILE
@@ -681,6 +689,7 @@ mcp:
         - "output_format == '' || ['json', 'text', 'table'].exists(f, f == output_format)"  # Valid output formats
         - "profile == '' || profile.matches('^[a-zA-Z0-9_-]+$')"  # Valid profile name format
       run:
+        timeout: "60s"
         env:
           - HOME
           - AWS_PROFILE
@@ -746,6 +755,7 @@ mcp:
         - "output_format == '' || ['json', 'text', 'table'].exists(f, f == output_format)"  # Valid output formats
         - "profile == '' || profile.matches('^[a-zA-Z0-9_-]+$')"  # Valid profile name format
       run:
+        timeout: "60s"
         env:
           - HOME
           - AWS_PROFILE
@@ -801,6 +811,7 @@ mcp:
         - "output_format == '' || ['json', 'text', 'table'].exists(f, f == output_format)"  # Valid output formats
         - "profile == '' || profile.matches('^[a-zA-Z0-9_-]+$')"  # Valid profile name format
       run:
+        timeout: "60s"
         env:
           - HOME
           - AWS_PROFILE
@@ -861,6 +872,7 @@ mcp:
         - "record_type == '' || ['A', 'AAAA', 'CNAME', 'MX', 'TXT', 'NS', 'SOA', 'SRV', 'PTR', 'CAA', 'DS', 'NAPTR', 'SPF', 'ANY'].exists(t, t == record_type)"  # Valid record types
         - "nameserver == '' || nameserver.matches('^[a-zA-Z0-9][a-zA-Z0-9\\\\-\\\\.]+\\\\.[a-zA-Z]{2,}$')"  # Valid nameserver format
       run:
+        timeout: "60s"
         command: |
           TYPE_PARAM=""
           {{ if .record_type }}
@@ -919,6 +931,7 @@ mcp:
         - "output_format == '' || ['json', 'text', 'table'].exists(f, f == output_format)"  # Valid output formats
         - "profile == '' || profile.matches('^[a-zA-Z0-9_-]+$')"  # Valid profile name format
       run:
+        timeout: "60s"
         env:
           - HOME
           - AWS_PROFILE

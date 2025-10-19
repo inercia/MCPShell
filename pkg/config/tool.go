@@ -19,12 +19,12 @@ type Tool struct {
 	SelectedRunner *MCPToolRunner
 }
 
-// checkToolRequirements checks if the tool has at least one runner that meets
+// CheckToolRequirements checks if the tool has at least one runner that meets
 // its prerequisites.
 //
 // Returns:
 //   - true if a suitable runner is found, false otherwise
-func (t *Tool) checkToolRequirements() bool {
+func (t *Tool) CheckToolRequirements() bool {
 	// With the removal of deprecated fields, we now only support
 	// the runners mechanism
 	return t.findSuitableRunner()

@@ -28,6 +28,7 @@ mcp:
         - "!jq_filter.contains(';')" # Prevent command injection
         - "!jq_filter.matches('.*[&|><`$].*')" # Block shell special characters
       run:
+        timeout: "60s"
         env:
           - GITHUB_TOKEN
         command: |
@@ -96,6 +97,7 @@ mcp:
         - "assignee == '' || assignee.size() <= 50" # Reasonable assignee length
         - "!assignee.contains(';')" # Prevent command injection
       run:
+        timeout: "60s"
         env:
           - GITHUB_TOKEN
         command: |
@@ -155,6 +157,7 @@ mcp:
         - "!repo.contains(';')" # Prevent command injection
         - "int(issue_number) > 0" # Valid issue number
       run:
+        timeout: "60s"
         env:
           - GITHUB_TOKEN
         command: |
@@ -230,6 +233,7 @@ mcp:
         - "base == '' || base.size() <= 50" # Reasonable base branch length
         - "!base.contains(';')" # Prevent command injection
       run:
+        timeout: "60s"
         env:
           - GITHUB_TOKEN
         command: |
@@ -290,6 +294,7 @@ mcp:
         - "!repo.contains(';')" # Prevent command injection
         - "int(pr_number) > 0" # Valid PR number
       run:
+        timeout: "60s"
         env:
           - GITHUB_TOKEN
         command: |
@@ -341,6 +346,7 @@ mcp:
         - "!repo.contains(';')" # Prevent command injection
         - "int(limit) == 0 || (int(limit) > 0 && int(limit) <= 50)" # Reasonable limit
       run:
+        timeout: "60s"
         env:
           - GITHUB_TOKEN
         command: |
@@ -395,6 +401,7 @@ mcp:
         - "!tag.contains(';')" # Prevent command injection
         - "tag.matches('^[a-zA-Z0-9_.-]+$')" # Valid tag characters
       run:
+        timeout: "60s"
         env:
           - GITHUB_TOKEN
         command: |
@@ -452,6 +459,7 @@ mcp:
         - "language == '' || language.size() <= 30" # Reasonable language length
         - "!language.contains(';')" # Prevent command injection
       run:
+        timeout: "60s"
         env:
           - GITHUB_TOKEN
         command: |
@@ -512,6 +520,7 @@ mcp:
         - "sort == '' || ['stars', 'forks', 'updated'].exists(s, s == sort)" # Valid sort options
         - "order == '' || ['asc', 'desc'].exists(o, o == order)" # Valid order options
       run:
+        timeout: "60s"
         command: |
           ARGS=""
           ARGS="$ARGS {{ if .limit }}--limit {{ .limit }}{{ end }}"
@@ -577,6 +586,7 @@ mcp:
         - "sort == '' || ['comments', 'created', 'updated'].exists(s, s == sort)" # Valid sort options
         - "order == '' || ['asc', 'desc'].exists(o, o == order)" # Valid order options
       run:
+        timeout: "60s"
         env:
           - GITHUB_TOKEN
         command: |
@@ -634,6 +644,7 @@ mcp:
         - "int(limit) == 0 || (int(limit) > 0 && int(limit) <= 50)" # Reasonable limit
         - "visibility == '' || ['all', 'public', 'secret'].exists(v, v == visibility)" # Valid visibility
       run:
+        timeout: "60s"
         env:
           - GITHUB_TOKEN
         command: |
@@ -686,6 +697,7 @@ mcp:
         - "repo.matches('^[a-zA-Z0-9_.-]+/[a-zA-Z0-9_.-]+$')" # Valid repo format (owner/repo)
         - "!repo.contains(';')" # Prevent command injection
       run:
+        timeout: "60s"
         env:
           - GITHUB_TOKEN
         command: |
@@ -736,6 +748,7 @@ mcp:
         - "workflow.size() > 0 && workflow.size() <= 100" # Reasonable workflow name/ID length
         - "!workflow.contains(';')" # Prevent command injection
       run:
+        timeout: "60s"
         env:
           - GITHUB_TOKEN
         command: |
@@ -798,6 +811,7 @@ mcp:
         - "branch == '' || branch.size() <= 50" # Reasonable branch length
         - "!branch.contains(';')" # Prevent command injection
       run:
+        timeout: "60s"
         env:
           - GITHUB_TOKEN
         command: |

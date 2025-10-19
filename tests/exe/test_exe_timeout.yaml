@@ -1,0 +1,55 @@
+mcp:
+  description: |
+    Test configuration for timeout functionality.
+    Contains tools with different timeout scenarios.
+  run:
+    shell: bash
+  tools:
+    - name: "quick_command"
+      description: "Fast command that completes within timeout"
+      run:
+        timeout: "5s"
+        command: |
+          echo "Quick command completed successfully"
+      output:
+        format: text
+
+    - name: "slow_command_short_timeout"
+      description: "Slow command that should be killed by timeout"
+      params:
+        duration:
+          type: string
+          description: "Duration to sleep in seconds"
+          required: false
+          default: "10"
+      run:
+        timeout: "2s"
+        command: |
+          echo "Starting slow command (will timeout)..."
+          sleep {{ .duration }}
+          echo "This should never be printed"
+        runners:
+          - name: exec
+      output:
+        format: text
+
+    - name: "command_with_long_timeout"
+      description: "Quick command with generous timeout"
+      run:
+        timeout: "30s"
+        command: |
+          echo "Command with long timeout"
+          sleep 1
+          echo "Completed successfully"
+      output:
+        format: text
+
+    - name: "no_timeout_command"
+      description: "Command without timeout specified"
+      run:
+        command: |
+          echo "No timeout specified"
+          sleep 0.5
+          echo "Done"
+      output:
+        format: text

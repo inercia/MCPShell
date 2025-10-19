@@ -13,6 +13,7 @@ mcp:
           description: "Name of the person to greet"
           required: true
       run:
+        timeout: "30s"
         command: "echo 'Hello, {{ .name }}!'"
     
     - name: "weather"
@@ -26,6 +27,7 @@ mcp:
           # type is omitted, defaults to "string"
           description: "Output format (simple or detailed)"
       run:
+        timeout: "30s"
         command: "echo 'Sunny, 72°F'"
       output:
         prefix: "The weather in {{ .location }} is"
@@ -45,6 +47,7 @@ mcp:
           type: boolean
           description: "A boolean flag"
       run:
+        timeout: "30s"
         command: "echo '{{ .text_input }}, {{ .number_input }}, {{ .flag }}'"
       output:
         prefix: "Parameters received:" 

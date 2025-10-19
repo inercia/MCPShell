@@ -72,12 +72,14 @@ Tests direct tool execution without the agent (using the `exe` command).
 - **test_exe.sh**: Basic tool execution and file creation
 - **test_exe_empty_file.sh**: Tests default content handling for empty files
 - **test_exe_constraints.sh**: Tests that constraints are properly enforced
+- **test_exe_timeout.sh**: Tests that command timeouts work correctly
 
 ### Runner Tests (`runners/`)
 
 Tests different execution environments for tools.
 
 - **test_runner_docker.sh**: Tests Docker-based tool execution
+- **test_runner_sandbox_exec.sh**: Tests sandbox-exec runner (macOS only)
 
 ### Common Utilities (`common/`)
 

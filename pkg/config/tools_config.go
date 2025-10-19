@@ -95,6 +95,10 @@ type MCPToolRunConfig struct {
 	// Env is a list of environment variable names to pass from the parent process
 	Env []string `yaml:"env,omitempty"`
 
+	// Timeout is the maximum duration for command execution (e.g., "30s", "5m")
+	// If not specified, no timeout is applied
+	Timeout string `yaml:"timeout,omitempty"`
+
 	// Runners is a list of possible runner configurations
 	Runners []MCPToolRunner `yaml:"runners,omitempty"`
 }
@@ -151,7 +155,7 @@ func (c *ToolsConfig) GetTools() []Tool {
 		}
 
 		// Check prerequisites before creating the tool
-		if !tool.checkToolRequirements() {
+		if !tool.CheckToolRequirements() {
 			continue // Skip this tool if prerequisites are not met
 		}
 

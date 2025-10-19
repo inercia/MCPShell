@@ -11,6 +11,7 @@ mcp:
     - name: "storage_overview"
       description: "Show comprehensive storage overview (filesystems, usage, mounts)"
       run:
+        timeout: "30s"
         command: |
           echo "Filesystem Usage:"
           df -h
@@ -83,6 +84,7 @@ mcp:
         - "path == '' || path.matches('^[a-zA-Z0-9/._\\\\-]+$')" # Safe path characters
         - "depth == 0.0 || (depth >= 1.0 && depth <= 3.0)" # Reasonable depth values
       run:
+        timeout: "30s"
         command: |
           # Set default values
           DEPTH=2
@@ -169,6 +171,7 @@ mcp:
     - name: "inodes_check"
       description: "Check inode usage on filesystems"
       run:
+        timeout: "30s"
         command: |
           echo "Inode Usage by Filesystem:"
           
@@ -239,6 +242,7 @@ mcp:
         - "path == '' || path.matches('^[a-zA-Z0-9/._\\\\-]+$')" # Safe path characters
         - "min_size_mb == 0.0 || (min_size_mb >= 10.0 && min_size_mb <= 1000.0)" # Reasonable size
       run:
+        timeout: "30s"
         command: |
           # Set default values
           MIN_SIZE=100
@@ -315,6 +319,7 @@ mcp:
     - name: "fs_type_summary"
       description: "Show summary of filesystem types and mount options"
       run:
+        timeout: "30s"
         command: |
           if [[ "$(uname)" == "Darwin" ]]; then
             # MacOS
@@ -387,6 +392,7 @@ mcp:
         - "disk == '' || disk.matches('^[a-zA-Z0-9]+$')" # Only alphanumeric disk names
         - "disk == '' || disk.size() <= 20" # Reasonable disk name length
       run:
+        timeout: "30s"
         command: |
           DISK="{{ .disk }}"
           

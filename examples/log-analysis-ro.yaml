@@ -25,6 +25,7 @@ mcp:
         - "priority == '' || ['error', 'warning', 'notice', 'info', 'debug'].exists(p, p == priority)"  # Valid priorities
         - "service == '' || service.matches('^[a-zA-Z0-9_.-]+$')"  # Safe service name chars
       run:
+        timeout: "30s"
         command: |
           # Set defaults
           LINES=50
@@ -162,6 +163,7 @@ mcp:
         - "pattern == '' || pattern.size() <= 100"                  # Reasonable pattern length
         - "time_window == '' || time_window.matches(\"^[0-9]+[mhd]$\")"  # Valid time format
       run:
+        timeout: "30s"
         command: |
           LOG_PATH="{{ .log_path }}"
           
@@ -293,6 +295,7 @@ mcp:
       constraints:
         - "int(hours) == 0 || (int(hours) >= 1 && int(hours) <= 168)"  # 1 hour to 7 days
       run:
+        timeout: "30s"
         command: |
           # Set defaults
           HOURS=24
@@ -379,6 +382,7 @@ mcp:
         - "custom_log_path == '' || custom_log_path.matches(\"^[a-zA-Z0-9/._\\\\-]+$\")"  # Safe path characters
         - "int(lines) == 0 || (int(lines) >= 1 && int(lines) <= 1000)"           # Reasonable line count
       run:
+        timeout: "30s"
         command: |
           APP="{{ .application }}"
           
@@ -529,6 +533,7 @@ mcp:
         - "log_dir == '' || !log_dir.contains('../')"              # Prevent directory traversal
         - "log_dir == '' || log_dir.matches(\"^[a-zA-Z0-9/._\\\\-]+$\")"  # Safe path characters
       run:
+        timeout: "30s"
         command: |
           PATTERN="{{ .pattern }}"
           

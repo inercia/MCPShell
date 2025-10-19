@@ -1,0 +1,105 @@
+mcp:
+  description: "sandbox-exec runner test configuration"
+  run:
+    shell: bash
+  tools:
+    - name: "sandbox_hello"
+      description: "Simple hello world command running in sandbox-exec"
+      run:
+        timeout: "5s"
+        command: |
+          echo "Hello from sandbox-exec"
+        runners:
+          - name: sandbox-exec
+            requirements:
+              executables: [sandbox-exec]
+            options:
+              allow_network: false
+              allow_write: false
+      output:
+        format: string
+    
+    - name: "sandbox_read_file"
+      description: "Test reading from allowed paths"
+      run:
+        timeout: "5s"
+        command: |
+          cat /etc/hostname 2>/dev/null || echo "hostname file not accessible"
+          echo "Can read /etc files"
+        runners:
+          - name: sandbox-exec
+            requirements:
+              executables: [sandbox-exec]
+            options:
+              allow_network: false
+              allow_write: false
+              read_paths:
+                - /etc
+      output:
+        format: string
+
+    - name: "sandbox_with_write"
+      description: "Test writing to /tmp with proper permissions"
+      params:
+        filename:
+          type: string
+          description: "Filename to create in /tmp"
+          required: true
+      run:
+        timeout: "5s"
+        command: |
+          echo "Test content" > /tmp/{{ .filename }}
+          cat /tmp/{{ .filename }}
+          rm -f /tmp/{{ .filename }}
+        runners:
+          - name: sandbox-exec
+            requirements:
+              executables: [sandbox-exec]
+            options:
+              allow_network: false
+              allow_write: true
+              write_paths:
+                - /tmp
+      output:
+        format: string
+
+    - name: "sandbox_with_timeout"
+      description: "Test that timeout works with sandbox-exec"
+      params:
+        duration:
+          type: string
+          description: "Duration to sleep"
+          required: false
+          default: "10"
+      run:
+        timeout: "2s"
+        command: |
+          echo "Starting sleep..."
+          sleep {{ .duration }}
+          echo "This should not be printed"
+        runners:
+          - name: sandbox-exec
+            requirements:
+              executables: [sandbox-exec]
+            options:
+              allow_network: false
+              allow_write: false
+      output:
+        format: string
+
+    - name: "sandbox_network_blocked"
+      description: "Test that network access is blocked by default"
+      run:
+        timeout: "5s"
+        command: |
+          # Try to access network (should fail or timeout quickly)
+          curl -s --max-time 1 https://www.google.com 2>&1 || echo "Network access blocked as expected"
+        runners:
+          - name: sandbox-exec
+            requirements:
+              executables: [sandbox-exec, curl]
+            options:
+              allow_network: false
+              allow_write: false
+      output:
+        format: string

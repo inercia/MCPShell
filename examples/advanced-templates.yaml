@@ -31,6 +31,7 @@ mcp:
         - "name.size() >= 2 && name.size() <= 50"  # Name length between 2 and 50 chars
         - "title == '' || ['Mr', 'Mrs', 'Ms', 'Dr', 'Prof'].exists(t, t == title)"  # Only allowed titles
       run:
+        timeout: "5s"
         command: "echo '{{ if .title }}Hello, {{ .title }} {{ .name }}!{{ else }}Hello, {{ .name }}!{{ end }}'"
     
     # -----------------------------------------------
@@ -67,6 +68,7 @@ mcp:
         - "!directory.contains('~')"    # Prevent home directory expansion
         - "extension == '' || extension.matches('^[a-zA-Z0-9]+$')"  # Extension must be alphanumeric if provided
       run:
+        timeout: "30s"
         command: "find {{ .directory }} {{ if .recursive }}-type f{{ else }}-maxdepth 1 -type f{{ end }} {{ if .extension }}-name \"*.{{ .extension }}\"{{ end }}"
       output:
         prefix: "Found files:"
@@ -105,6 +107,7 @@ mcp:
         - "text.size() <= 200"        # Limit text size
         - "!text.matches('.*[;&|`].*')"  # Prevent shell injection
       run:
+        timeout: "10s"
         command: |
           echo '{{ .text }}' | \
           {{ if .uppercase }}tr '[:lower:]' '[:upper:]'{{ else }}cat{{ end }} | \

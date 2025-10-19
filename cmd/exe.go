@@ -152,11 +152,20 @@ will be reported.
 			shell = "sh"
 		}
 
-		// Create a command handler
-		handler, err := command.NewCommandHandler(config.Tool{
+		// Create a Tool and check requirements to select the appropriate runner
+		tool := config.Tool{
 			MCPTool: config.CreateMCPTool(*targetTool),
 			Config:  *targetTool,
-		}, targetTool.Params, shell, logger)
+		}
+
+		// Check tool requirements and select runner
+		if !tool.CheckToolRequirements() {
+			logger.Error("Tool requirements not met - no suitable runner found")
+			return fmt.Errorf("tool requirements not met - no suitable runner found")
+		}
+
+		// Create a command handler
+		handler, err := command.NewCommandHandler(tool, targetTool.Params, shell, logger)
 		if err != nil {
 			logger.Error("Failed to create command handler: %v", err)
 			return fmt.Errorf("failed to create command handler: %w", err)

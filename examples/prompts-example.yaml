@@ -37,6 +37,7 @@ mcp:
         - "filename.size() <= 100"    # Limit filename length
         - "content.size() <= 1000"    # Limit content size
       run:
+        timeout: "30s"
         command: |
           echo "Creating file: {{ .filename }}"
           echo "{{ .content }}" > "{{ .filename }}"

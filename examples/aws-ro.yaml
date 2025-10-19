@@ -19,6 +19,7 @@ mcp:
       constraints:
         - "output_format == '' || ['simple', 'detailed'].exists(f, f == output_format)"  # Valid output formats
       run:
+        timeout: "60s"
         env:
           - HOME
           - AWS_CREDENTIALS_FILE
@@ -152,6 +153,7 @@ mcp:
         - "output_format == '' || ['json', 'text', 'table'].exists(f, f == output_format)"  # Valid output formats
         - "profile == '' || profile.matches('^[a-zA-Z0-9_-]+$')"  # Valid profile name format
       run:
+        timeout: "60s"
         env:
           - HOME
           - AWS_PROFILE

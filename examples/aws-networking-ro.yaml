@@ -33,6 +33,7 @@ mcp:
         - "profile == '' || profile.matches('^[a-zA-Z0-9_-]+$')"        # Valid profile name format
         - "output_format == '' || ['json', 'text', 'table'].exists(f, f == output_format)"  # Valid output formats
       run:
+        timeout: "60s"
         env:
           - AWS_PROFILE
           - AWS_DEFAULT_PROFILE
@@ -97,6 +98,7 @@ mcp:
         - "vpc_id == '' || vpc_id.matches('^vpc-[a-f0-9]{8,}$')"        # Valid VPC ID format
         - "output_format == '' || ['json', 'text', 'table'].exists(f, f == output_format)"  # Valid output formats
       run:
+        timeout: "60s"
         env:
           - AWS_PROFILE
           - AWS_DEFAULT_PROFILE
@@ -146,6 +148,7 @@ mcp:
         - "vpc_id == '' || vpc_id.matches('^vpc-[a-f0-9]{8,}$')"        # Valid VPC ID format
         - "output_format == '' || ['json', 'text', 'table'].exists(f, f == output_format)"  # Valid output formats
       run:
+        timeout: "60s"
         env:
           - AWS_PROFILE
           - AWS_DEFAULT_PROFILE
@@ -196,6 +199,7 @@ mcp:
         - "group_id.matches('^sg-[a-f0-9]{8,}$')"                       # Valid security group ID format
         - "output_format == '' || ['json', 'text', 'table'].exists(f, f == output_format)"  # Valid output formats
       run:
+        timeout: "60s"
         env:
           - AWS_PROFILE
           - AWS_DEFAULT_PROFILE
@@ -244,6 +248,7 @@ mcp:
         - "vpc_id == '' || vpc_id.matches('^vpc-[a-f0-9]{8,}$')"        # Valid VPC ID format
         - "output_format == '' || ['json', 'text', 'table'].exists(f, f == output_format)"  # Valid output formats
       run:
+        timeout: "60s"
         env:
           - AWS_PROFILE
           - AWS_DEFAULT_PROFILE
@@ -293,6 +298,7 @@ mcp:
         - "vpc_id == '' || vpc_id.matches('^vpc-[a-f0-9]{8,}$')"        # Valid VPC ID format
         - "output_format == '' || ['json', 'text', 'table'].exists(f, f == output_format)"  # Valid output formats
       run:
+        timeout: "60s"
         env:
           - AWS_PROFILE
           - AWS_DEFAULT_PROFILE
@@ -346,6 +352,7 @@ mcp:
         - "subnet_id == '' || subnet_id.matches('^subnet-[a-f0-9]{8,}$')"  # Valid subnet ID format
         - "output_format == '' || ['json', 'text', 'table'].exists(f, f == output_format)"  # Valid output formats
       run:
+        timeout: "60s"
         env:
           - AWS_PROFILE
           - AWS_DEFAULT_PROFILE
@@ -397,6 +404,7 @@ mcp:
         - "profile == '' || profile.matches('^[a-zA-Z0-9_-]+$')"        # Valid profile name format
         - "output_format == '' || ['json', 'text', 'table'].exists(f, f == output_format)"  # Valid output formats
       run:
+        timeout: "60s"
         env:
           - AWS_PROFILE
           - AWS_DEFAULT_PROFILE
@@ -445,6 +453,7 @@ mcp:
         - "profile == '' || profile.matches('^[a-zA-Z0-9_-]+$')"        # Valid profile name format
         - "output_format == '' || ['json', 'text', 'table'].exists(f, f == output_format)"  # Valid output formats
       run:
+        timeout: "60s"
         env:
           - AWS_PROFILE
           - AWS_DEFAULT_PROFILE
@@ -489,6 +498,7 @@ mcp:
         - "profile == '' || profile.matches('^[a-zA-Z0-9_-]+$')"        # Valid profile name format
         - "output_format == '' || ['json', 'text', 'table'].exists(f, f == output_format)"  # Valid output formats
       run:
+        timeout: "60s"
         env:
           - AWS_PROFILE
           - AWS_DEFAULT_PROFILE
@@ -537,6 +547,7 @@ mcp:
         - "vpc_id == '' || vpc_id.matches('^vpc-[a-f0-9]{8,}$')"        # Valid VPC ID format
         - "output_format == '' || ['json', 'text', 'table'].exists(f, f == output_format)"  # Valid output formats
       run:
+        timeout: "60s"
         env:
           - AWS_PROFILE
           - AWS_DEFAULT_PROFILE
@@ -586,6 +597,7 @@ mcp:
         - "vpc_id == '' || vpc_id.matches('^vpc-[a-f0-9]{8,}$')"        # Valid VPC ID format
         - "output_format == '' || ['json', 'text', 'table'].exists(f, f == output_format)"  # Valid output formats
       run:
+        timeout: "60s"
         env:
           - AWS_PROFILE
           - AWS_DEFAULT_PROFILE
@@ -631,6 +643,7 @@ mcp:
         - "profile == '' || profile.matches('^[a-zA-Z0-9_-]+$')"        # Valid profile name format
         - "output_format == '' || ['json', 'text', 'table'].exists(f, f == output_format)"  # Valid output formats
       run:
+        timeout: "60s"
         env:
           - AWS_PROFILE
           - AWS_DEFAULT_PROFILE

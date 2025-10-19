@@ -11,6 +11,7 @@ mcp:
     - name: "security_overview"
       description: "Show system security overview (users, groups, permissions)"
       run:
+        timeout: "30s"
         command: |
           echo "System Users and Groups:"
           echo "------------------------"
@@ -65,6 +66,7 @@ mcp:
     - name: "network_security_check"
       description: "Check network security settings (firewall, open ports)"
       run:
+        timeout: "30s"
         command: |
           echo "Network Security Information:"
           echo "----------------------------"
@@ -142,6 +144,7 @@ mcp:
         - "path == '' || path.startsWith('/')"                   # Only absolute paths
         - "path == '' || path.matches(\"^[a-zA-Z0-9/._\\\\-]+$\")"   # Safe path characters
       run:
+        timeout: "30s"
         command: |
           # Check common sensitive files or user-specified path
           if [ -n "{{ .path }}" ]; then
@@ -214,6 +217,7 @@ mcp:
     - name: "process_security_check"
       description: "Check running processes for security concerns"
       run:
+        timeout: "30s"
         command: |
           echo "Process Security Analysis:"
           echo "--------------------------"
@@ -267,6 +271,7 @@ mcp:
         - "int(port) == 0 || (int(port) >= 1 && int(port) <= 65535)"  # Valid port range
         - "host == '' || int(port) > 0"                          # Port required if host specified
       run:
+        timeout: "30s"
         command: |
           echo "Network Connectivity Tests:"
           echo "---------------------------"
@@ -373,6 +378,7 @@ mcp:
         - "domain.size() <= 100"                                # Reasonable domain length
         - "int(port) == 0 || (int(port) >= 1 && int(port) <= 65535)"  # Valid port range
       run:
+        timeout: "30s"
         command: |
           DOMAIN="{{ .domain }}"
           PORT=443

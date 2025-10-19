@@ -95,9 +95,9 @@ func TestCheckToolPrerequisites(t *testing.T) {
 					},
 				},
 			}
-			result := tool.checkToolRequirements()
+			result := tool.CheckToolRequirements()
 			if result != tt.expected {
-				t.Errorf("checkToolRequirements() = %v, expected %v", result, tt.expected)
+				t.Errorf("CheckToolRequirements() = %v, expected %v", result, tt.expected)
 			}
 		})
 	}

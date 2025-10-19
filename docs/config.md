@@ -208,11 +208,16 @@ The run configuration defines how the tool executes:
   - Environment variablees can be just names (ie, `KUBECONFIG`),
     assignments (ie, `KUBECONFIG=/some/path`) or event templated
     assignments (ie, `KUBECONFIG={{ .kubeconfig }}`).
+- `timeout`: Maximum duration for command execution (optional)
+  - Format: A duration string such as "30s", "5m", "1h30m"
+  - If not specified, no timeout is applied (commands can run indefinitely)
+  - Examples: "10s" (10 seconds), "2m" (2 minutes), "1h" (1 hour)
+  - **Recommended**: Always set a timeout to prevent commands from hanging
 - `runners`: An array of runner configurations that will be used to execute the command (optional)
 
 Commands can use the Go template syntax, including the presence of parameters like `{{ .param_name }}`.
 
-Example specifying environment variables to pass through:
+Example specifying environment variables and timeout:
 
 ```yaml
 run:
@@ -220,6 +225,7 @@ run:
     - KUBECONFIG     # Pass the KUBECONFIG environment variable to the command
     - HOME           # Pass the HOME environment variable to the command
     - TESTS=false    # Pass some env variables wwith some values
+  timeout: "30s"     # Timeout after 30 seconds
   command: |
     kubectl get {{ .resource }}
 ```

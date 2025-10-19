@@ -61,6 +61,7 @@ mcp:
         - "labels == '' || labels.size() <= 100"                   # Reasonable label length
         - "output_format == '' || output_format == 'wide' || output_format == 'json' || output_format == 'yaml'"  # Valid formats
       run:
+        timeout: "60s"
         command: |
           NAMESPACE_PARAM="{{ if .ns }}-n {{ .ns }}{{ end }}"
           LABEL_PARAM="{{ if .labels }}-l {{ .labels }}{{ end }}"
@@ -134,6 +135,7 @@ mcp:
         - "name == '' || !name.contains(';')"                      # Prevent injection
         - "ns == '' || (ns.size() <= 63 && ns.matches('^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'))"  # Valid k8s namespace
       run:
+        timeout: "60s"
         command: |
           NAMESPACE_PARAM="{{ if .ns }}-n {{ .ns }}{{ end }}"          
           NAME_PARAM="{{ .name }}"
@@ -222,6 +224,7 @@ mcp:
         - "filter_grep_regex == '' || (filter_grep_regex.size() <= 100 && !filter_grep_regex.contains(';'))"  # Safe grep regex pattern
         - "(filter_grep == '' || filter_grep_regex == '')"                       # Only one of filter_grep or filter_grep_regex can be used
       run:
+        timeout: "60s"
         command: |
           NAMESPACE_PARAM="{{ if .ns }}-n {{ .ns }}{{ end }}"
           CONTAINER_PARAM="{{ if .container }}-c {{ .container }}{{ end }}"
@@ -280,6 +283,7 @@ mcp:
           type: string
           description: "Kubernetes context to use (optional, uses current context if not specified)"
       run:
+        timeout: "60s"
         command: |
           CONTEXT_PARAM="{{ if .context }}--context={{ .context }}{{ end }}"
           
@@ -324,6 +328,7 @@ mcp:
           type: string
           description: "Kubernetes context to use (optional, uses current context if not specified)"
       run:
+        timeout: "60s"
         command: |
           CONTEXT_PARAM="{{ if .context }}--context={{ .context }}{{ end }}"
           
@@ -371,6 +376,7 @@ mcp:
       constraints:
         - "context.size() > 0 && context.size() <= 253"            # Valid context name (required)
       run:
+        timeout: "60s"
         command: |          
           kubectl --context={{ .context }} --request-timeout=30s get namespaces
         env:
@@ -457,6 +463,7 @@ mcp:
         - "filter_grep == '' || filter_grep_regex == ''"           # Only one of filter_grep or filter_grep_regex can be used
         - "filter_jq == '' || (filter_grep == '' && filter_grep_regex == '')"  # Can't use both jq and grep filters
       run:
+        timeout: "60s"
         command: |
 
           NAMESPACE_PARAM="{{ if .ns }}-n {{ .ns }}{{ end }}"
@@ -607,6 +614,7 @@ mcp:
         - "filter_grep == '' || filter_grep_regex == ''"           # Only one of filter_grep or filter_grep_regex can be used
         - "filter_jq == '' || (filter_grep == '' && filter_grep_regex == '')"  # Can't use both jq and grep filters
       run:
+        timeout: "60s"
         command: |
 
           NAMESPACE_PARAM="{{ if .ns }}-n {{ .ns }}{{ end }}"

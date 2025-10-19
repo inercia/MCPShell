@@ -16,6 +16,7 @@ mcp:
         - "message.size() > 0"
         - "message.size() <= 100"
       run:
+        timeout: "30s"
         command: |
           echo {{ .message }}
         runners:
@@ -42,6 +43,7 @@ mcp:
         - "!code.contains('import subprocess')"
         - "!code.contains('__import__')"
       run:
+        timeout: "30s"
         command: |
           python3 -c "{{ .code }}"
         runners:
@@ -81,6 +83,7 @@ mcp:
         - "!filepath.contains('|')"
         - "!filepath.contains('>')"
       run:
+        timeout: "30s"
         command: |
           if [ "{{ .operation }}" = "grep" ]; then
             grep -n "{{ .pattern }}" {{ .filepath }}
@@ -122,6 +125,7 @@ mcp:
         - "!command.contains('|')"
         - "!command.contains('>')"
       run:
+        timeout: "30s"
         command: |
           {{ .command }}
         runners:
@@ -164,6 +168,7 @@ mcp:
         - "!command.contains('|')"
         - "!command.contains('>')"
       run:
+        timeout: "30s"
         command: |
           {{ .command }}
         runners:

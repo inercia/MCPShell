@@ -24,6 +24,7 @@ mcp:
         - "text.startsWith('hello')"                 # Prefix check
         - "text.contains('world')"                   # Substring check
       run:
+        timeout: "30s"
         command: "echo 'Valid text: {{ .text }}'"
 
     - name: "regex_constraints"
@@ -37,6 +38,7 @@ mcp:
         # Email format validation using regex
         - "email.matches(\"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\\\.[a-zA-Z]{2,}$\")"
       run:
+        timeout: "30s"
         command: "echo 'Valid email: {{ .email }}'"
 
     - name: "number_constraints"
@@ -52,6 +54,7 @@ mcp:
         - "value <= 100.0"                           # Maximum value
         - "int(value) % 2 == 0"                      # Even numbers only (using int conversion)
       run:
+        timeout: "30s"
         command: "echo 'Valid value: {{ .value }}'"
 
     - name: "boolean_constraints"
@@ -70,6 +73,7 @@ mcp:
         - "flag1 == true"                            # First flag must be true
         - "flag1 == flag2"                           # Both flags must match
       run:
+        timeout: "30s"
         command: "echo 'Valid flags: {{ .flag1 }} and {{ .flag2 }}'"
 
     - name: "list_existence_constraints"
@@ -83,6 +87,7 @@ mcp:
         # List existence check using exists() function
         - "['apple', 'banana', 'cherry', 'date', 'elderberry'].exists(f, f == fruit)"
       run:
+        timeout: "30s"
         command: "echo 'Valid fruit: {{ .fruit }}'"
 
     - name: "command_security_constraints"
@@ -114,6 +119,7 @@ mcp:
         # Ensure reasonable argument length
         - "arguments.size() <= 100"
       run:
+        timeout: "30s"
         command: "{{ .command }} {{ .arguments }}"
 
     - name: "combined_constraints"
@@ -134,6 +140,7 @@ mcp:
         # Age validation with error message using ternary operator
         - "int(age) >= 18 && int(age) <= 120"
       run:
+        timeout: "30s"
         command: "echo 'Valid user: {{ .username }}, age {{ .age }}'"
 
     - name: "filesystem_safety_constraints"
@@ -152,6 +159,7 @@ mcp:
         - "!filepath.startsWith('~')"                # Prevent home directory references
         - "['.txt', '.log', '.md', '.json', '.yaml', '.yml'].exists(ext, filepath.endsWith(ext))"  # File extension whitelist
       run:
+        timeout: "30s"
         command: "ls -la {{ .filepath }}"
 
     - name: "conditional_constraints"
@@ -175,4 +183,5 @@ mcp:
         # Admin mode has no file restrictions
         - "mode == 'admin' || !file.contains('system')"  # Only admin can access system files
       run:
+        timeout: "30s"
         command: "echo 'Operating on {{ .file }} in {{ .mode }} mode'" 

@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/mark3labs/mcp-go/mcp"
 
@@ -49,6 +50,7 @@ type CommandHandler struct {
 	constraintsCompiled *common.CompiledConstraints   // ... and the compiled versions
 	params              map[string]common.ParamConfig // the parameter configurations
 	envVars             []string                      // the environment variables passed to the command
+	timeout             string                        // the timeout for command execution (e.g., "30s", "5m")
 	shell               string                        // the shell to use
 	toolName            string                        // the name of the tool
 	runnerType          string                        // the type of runner to use
@@ -118,6 +120,7 @@ func NewCommandHandler(tool config.Tool, params map[string]common.ParamConfig, s
 		params:              params,
 		constraintsCompiled: compiled,
 		envVars:             tool.Config.Run.Env,
+		timeout:             tool.Config.Run.Timeout,
 		shell:               shell,
 		toolName:            tool.MCPTool.Name,
 		runnerType:          effectiveRunnerType,
@@ -152,8 +155,20 @@ func (h *CommandHandler) GetMCPHandler() func(ctx context.Context, request mcp.C
 			}
 		}
 
+		// Apply timeout if configured
+		executionCtx := ctx
+		if h.timeout != "" {
+			timeout, err := time.ParseDuration(h.timeout)
+			if err != nil {
+				return mcp.NewToolResultError(fmt.Sprintf("invalid timeout format '%s': %v", h.timeout, err)), nil
+			}
+			var cancel context.CancelFunc
+			executionCtx, cancel = context.WithTimeout(ctx, timeout)
+			defer cancel()
+		}
+
 		// Execute the command using the common implementation
-		output, _, err := h.executeToolCommand(ctx, args, runnerOpts)
+		output, _, err := h.executeToolCommand(executionCtx, args, runnerOpts)
 		if err != nil {
 			return mcp.NewToolResultError(err.Error()), nil
 		}

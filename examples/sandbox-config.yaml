@@ -15,6 +15,7 @@ mcp:
           type: string
           required: true
       run:
+        timeout: "30s"
         command: echo "Hello, {{.name}}!"
 
     # Example 2: Command using sandboxed runners
@@ -26,6 +27,7 @@ mcp:
           type: string
           required: true
       run:
+        timeout: "30s"
         command: 'echo "Sandboxed echo: {{.text}}"'
         runners:
           - name: sandbox-exec
@@ -46,6 +48,7 @@ mcp:
           type: string
           required: true
       run:
+        timeout: "30s"
         command: 'curl --max-time 5 {{.url}}'
         runners:
           - name: sandbox-exec
@@ -74,6 +77,7 @@ mcp:
       constraints:
         - 'directory.matches("^/tmp|^/var/tmp")'
       run:
+        timeout: "30s"
         command: 'ls -la {{.directory}}'
         runners:
           - name: sandbox-exec
@@ -104,6 +108,7 @@ mcp:
           type: string
           required: true
       run:
+        timeout: "30s"
         command: '{{.command}}'
         runners:
           - name: sandbox-exec

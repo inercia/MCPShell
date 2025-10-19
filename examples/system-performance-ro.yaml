@@ -10,6 +10,7 @@ mcp:
     - name: "system_overview"
       description: "Show system overview with key metrics (CPU, memory, disk, uptime)"
       run:
+        timeout: "30s"
         command: |
           echo "System: $(uname -s)"
           echo "Hostname: $(hostname)"
@@ -83,6 +84,7 @@ mcp:
         - "int(samples) == 0 || (int(samples) >= 1 && int(samples) <= 10)" # 1-10 samples
         - "int(delay) == 0 || (int(delay) >= 1 && int(delay) <= 5)" # 1-5 second delay
       run:
+        timeout: "30s"
         command: |
           # Set default values if not specified
           SAMPLES=3
@@ -166,6 +168,7 @@ mcp:
     - name: "memory_stats"
       description: "Show detailed memory usage statistics"
       run:
+        timeout: "30s"
         command: "if [[ \"$(uname)\" == \"Darwin\" ]]; then\n  # MacOS\n  echo \"Memory Usage Summary:\"\n  vm_stat | perl -ne '/page size of (\\d+)/ and $size=$1; /Pages free: (\\d+)/ and print \"Free Memory: \" . $1 * $size / 1048576 . \" MB\\n\"; /Pages active: (\\d+)/ and print \"Active Memory: \" . $1 * $size / 1048576 . \" MB\\n\"; /Pages inactive: (\\d+)/ and print \"Inactive Memory: \" . $1 * $size / 1048576 . \" MB\\n\"; /Pages speculative: (\\d+)/ and print \"Speculative Memory: \" . $1 * $size / 1048576 . \" MB\\n\"; /Pages wired down: (\\d+)/ and print \"Wired Memory: \" . $1 * $size / 1048576 . \" MB\\n\";'\n  \n  echo \"\"\n  echo \"Memory Pressure:\"\n  memory_pressure\n  \n  echo \"\"\n  echo \"Top Memory Processes:\"\n  top -l 1 -o MEM -n 5 | head -n 12\nelse\n  # Linux\n  echo \"Memory Usage Summary:\"\n  free -h\n  \n  echo \"\"\n  echo \"Memory Details:\"\n  cat /proc/meminfo | head -15\n  \n  echo \"\"\n  echo \"Swap Usage:\"\n  swapon --show\n  \n  echo \"\"\n  echo \"Top Memory Processes:\"\n  ps aux --sort=-%mem | head -6\n  \n  echo \"\"\n  echo \"Memory Caches:\"\n  echo \"Buffer/Cache usage: $(free | grep Mem | awk '{print $6}') bytes\"\nfi\n"
       output:
         prefix: "Memory Usage Analysis:"
@@ -207,6 +210,7 @@ mcp:
         - "int(samples) == 0 || (int(samples) >= 1 && int(samples) <= 5)" # 1-5 samples
         - "int(delay) == 0 || (int(delay) >= 1 && int(delay) <= 5)" # 1-5 second delay
       run:
+        timeout: "30s"
         command: |
           # Set default values if not specified
           SAMPLES=2
@@ -302,6 +306,7 @@ mcp:
         - "interface.size() <= 15" # Reasonable length
         - "int(samples) == 0 || (int(samples) >= 1 && int(samples) <= 5)" # 1-5 samples
       run:
+        timeout: "30s"
         command: |
           # Set default values if not specified
           SAMPLES=2
@@ -410,6 +415,7 @@ mcp:
         - "sort_by == '' || ['cpu', 'memory', 'both'].exists(s, s == sort_by)"  # Valid sort options
         - "int(count) == 0 || (int(count) >= 1 && int(count) <= 20)"           # 1-20 processes
       run:
+        timeout: "30s"
         command: |
           # Set default values if not specified
           SORT="cpu"

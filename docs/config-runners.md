@@ -22,6 +22,7 @@ Here's an example of a tool with multiple runners:
 
 ```yaml
 run:
+  timeout: "30s"    # Command will timeout after 30 seconds
   command: "echo 'Hello {{ .name }}'"
   runners:
     - name: sandbox-exec
@@ -34,6 +35,8 @@ run:
         allow_user_folders: false
     - name: exec                         # acts as a fallback
 ```
+
+**Note**: The `timeout` setting applies to all runners. Regardless of which runner is selected (sandbox-exec, firejail, or exec), the command will be terminated if it exceeds the specified timeout duration.
 
 In this example:
 
@@ -431,6 +434,7 @@ Here's a complete example of a tool that uses different runners based on the pla
     - "!filename.contains('../')"                         # Prevent directory traversal
     - "['.txt', '.log', '.md'].exists(ext, filename.endsWith(ext))"  # Only allow certain file extensions
   run:
+    timeout: "10s"    # Timeout after 10 seconds
     command: "cat {{ .filename }}"
     runners:
       - name: sandbox-exec
@@ -467,6 +471,7 @@ Here's an example showing how to properly configure file and folder access for k
       description: "Resource type (pods, deployments, etc.)"
       required: true
   run:
+    timeout: "30s"    # Timeout after 30 seconds
     command: "kubectl get {{ .resource }}"
     env:
       - KUBECONFIG

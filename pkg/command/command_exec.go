@@ -84,6 +84,34 @@ func (h *CommandHandler) executeToolCommand(ctx context.Context, params map[stri
 		return "", nil, fmt.Errorf("error processing command template: %v", err)
 	}
 
+	// Wrap command with timeout if configured and timeout command is available
+	if h.timeout != "" && common.CheckExecutableExists("timeout") {
+		timeoutDuration, err := time.ParseDuration(h.timeout)
+		if err != nil {
+			h.logger.Error("Invalid timeout format '%s': %v", h.timeout, err)
+			return "", nil, fmt.Errorf("invalid timeout format '%s': %v", h.timeout, err)
+		}
+
+		// Convert to seconds for the timeout command
+		timeoutSeconds := int(timeoutDuration.Seconds())
+		if timeoutSeconds < 1 {
+			timeoutSeconds = 1 // Minimum 1 second
+		}
+
+		// Escape single quotes in the command for shell
+		escapedCmd := strings.ReplaceAll(cmd, "'", "'\"'\"'")
+
+		// Wrap the command with timeout
+		// Using timeout command which will kill the entire process group
+		// This works reliably on Unix/Linux/macOS systems
+		cmd = fmt.Sprintf("timeout --kill-after=1s %ds sh -c '%s'", timeoutSeconds, escapedCmd)
+		h.logger.Debug("Wrapped command with Unix timeout: %ds", timeoutSeconds)
+	} else if h.timeout != "" {
+		// timeout command not available (probably Windows)
+		// Fall back to context-based timeout (less reliable for child processes)
+		h.logger.Debug("Unix timeout command not available, using context-based timeout: %s", h.timeout)
+	}
+
 	// h.logger.Debug("Processed command: %s", cmd)
 
 	// Prepare environment variables
@@ -130,7 +158,7 @@ func (h *CommandHandler) executeToolCommand(ctx context.Context, params map[stri
 		return "", nil, fmt.Errorf("error creating runner: %v", err)
 	}
 
-	// Execute the command
+	// Execute the command (timeout is handled by the context passed in from caller)
 	commandOutput, err := runner.Run(ctx, h.shell, cmd, env, params, true)
 	if err != nil {
 		h.logger.Error("Error executing command: %v", err)
@@ -185,7 +213,16 @@ func (h *CommandHandler) ExecuteCommand(params map[string]interface{}) (string, 
 	}
 
 	// Create context with timeout for command execution
-	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	// Use configured timeout if available, otherwise use a default of 60 seconds
+	timeout := 60 * time.Second
+	if h.timeout != "" {
+		parsedTimeout, err := time.ParseDuration(h.timeout)
+		if err != nil {
+			return "", fmt.Errorf("invalid timeout format '%s': %v", h.timeout, err)
+		}
+		timeout = parsedTimeout
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
 	// Use the common implementation

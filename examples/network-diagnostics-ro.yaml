@@ -19,6 +19,7 @@ mcp:
         - "hostname.matches('^[a-zA-Z0-9._-]+$')"                # Valid hostname characters
         - "!hostname.contains(';')"                              # Prevent command injection
       run:
+        timeout: "30s"
         command: |
           echo "Sending a single ping packet to {{ .hostname }}..."
           
@@ -43,6 +44,7 @@ mcp:
         - "!filter.contains(';')"                                # Prevent command injection
         - "!filter.matches('.*[&|><`$].*')"                      # Block shell special characters
       run:
+        timeout: "30s"
         command: |
           # Detect OS and use appropriate command
           if [ "$(uname)" = "Darwin" ]; then
@@ -79,6 +81,7 @@ mcp:
         - "!interface.matches('.*[&|><`$].*')"                   # Block shell special characters
         - "interface.matches('^[a-zA-Z0-9_:.-]*$')"              # Limit to alphanumeric and common interface chars
       run:
+        timeout: "30s"
         command: |
           echo "Private IP addresses:"
           if [ "$(uname)" = "Darwin" ]; then
@@ -110,6 +113,7 @@ mcp:
       constraints:
         - "true"  # No user input to validate, command is fixed
       run:
+        timeout: "30s"
         command: |
           if [ "$(uname)" = "Darwin" ]; then
             # macOS
@@ -140,6 +144,7 @@ mcp:
         - "!hostname.contains(';')"                              # Prevent command injection
         - "record_type == '' || ['A', 'AAAA', 'MX', 'CNAME', 'TXT', 'NS', 'SOA', 'SRV', 'PTR'].exists(t, t == record_type)"  # Valid record types
       run:
+        timeout: "30s"
         command: |
           if [ -n "{{ .record_type }}" ]; then
             dig "{{ .hostname }}" {{ .record_type }} +short || nslookup -type={{ .record_type }} "{{ .hostname }}"
@@ -165,6 +170,7 @@ mcp:
         - "!hostname.contains(';')"                              # Prevent command injection
         - "int(max_hops) == 0 || (int(max_hops) >= 1 && int(max_hops) <= 30)"   # Reasonable max hops
       run:
+        timeout: "30s"
         command: |
           MAX_HOPS=30
           if [ {{ .max_hops }} -gt 0 ]; then
@@ -201,6 +207,7 @@ mcp:
         - "!hostname.contains(';')"                              # Prevent command injection
         - "int(port) >= 1 && int(port) <= 65535"                 # Valid port range
       run:
+        timeout: "30s"
         command: |
           # Using timeout for all platforms to prevent hanging
           if [ "$(uname)" = "Darwin" ]; then
@@ -228,6 +235,7 @@ mcp:
         - "!filter.contains(';')"                                # Prevent command injection
         - "!filter.matches('.*[&|><`$].*')"                      # Block shell special characters
       run:
+        timeout: "30s"
         command: |
           if [ "$(uname)" = "Darwin" ]; then
             # macOS
@@ -253,6 +261,7 @@ mcp:
     - name: "dns_config"
       description: "Show DNS resolver configuration"
       run:
+        timeout: "30s"
         command: |
           echo "DNS Servers:"
           if [ "$(uname)" = "Darwin" ]; then
@@ -277,6 +286,7 @@ mcp:
       constraints:
         - "int(size) == 0 || (int(size) >= 1 && int(size) <= 10)"        # Reasonable test size with integers
       run:
+        timeout: "30s"
         command: |
           TEST_SIZE=1
           if [ {{ .size }} -ge 1 ]; then
