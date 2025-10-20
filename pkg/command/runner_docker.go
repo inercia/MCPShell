@@ -357,7 +357,7 @@ func (r *DockerRunner) Run(ctx context.Context, shell string, cmd string, env []
 
 	// Determine if we should run directly or via script
 	if isSingleExecutableCommand(cmd) {
-		r.logger.Printf("Optimization: running single executable command directly in Docker: %s", cmd)
+		r.logger.Debug("Optimization: running single executable command directly in Docker: %s", cmd)
 
 		// Build docker command to directly execute the command without a temp script
 		dockerCmd = r.opts.GetDirectExecutionCommand(cmd, env)
@@ -371,17 +371,17 @@ func (r *DockerRunner) Run(ctx context.Context, shell string, cmd string, env []
 		// Clean up the temporary script file when done
 		defer func() {
 			if err := os.Remove(scriptFile); err != nil {
-				r.logger.Printf("Warning: failed to remove temporary script file %s: %v", scriptFile, err)
+				r.logger.Debug("Warning: failed to remove temporary script file %s: %v", scriptFile, err)
 			}
 		}()
 
-		r.logger.Printf("Created temporary script file: %s", scriptFile)
+		r.logger.Debug("Created temporary script file: %s", scriptFile)
 
 		// Construct the docker run command with the script file
 		dockerCmd = r.opts.GetDockerCommand(scriptFile, env)
 	}
 
-	r.logger.Printf("Running command in Docker: %s", dockerCmd)
+	r.logger.Debug("Running command in Docker: %s", dockerCmd)
 
 	// Run the docker command - we set tmpfile to false because dockerCmd is already a full command
 	output, err := execRunner.Run(ctx, "sh", dockerCmd, nil, params, false)
@@ -420,7 +420,7 @@ func (r *DockerRunner) createScriptFile(shell string, cmd string, env []string) 
 		content.WriteString("\n# Preparation commands\n")
 		content.WriteString(r.opts.PrepareCommand)
 		content.WriteString("\n\n")
-		r.logger.Printf("Added preparation command to script: %s", r.opts.PrepareCommand)
+		r.logger.Debug("Added preparation command to script: %s", r.opts.PrepareCommand)
 	}
 
 	// Add the main command
@@ -452,6 +452,6 @@ func (r *DockerRunner) createScriptFile(shell string, cmd string, env []string) 
 		return "", fmt.Errorf("failed to close temporary script file: %w", err)
 	}
 
-	r.logger.Printf("Created temporary script file at: %s", scriptPath)
+	r.logger.Debug("Created temporary script file at: %s", scriptPath)
 	return scriptPath, nil
 }

@@ -107,7 +107,7 @@ func (cc *CompiledConstraints) Evaluate(args map[string]interface{}, params map[
 	evalArgs := make(map[string]interface{})
 	for k, v := range args {
 		evalArgs[k] = v
-		cc.logger.Printf("Argument provided: %s = %v", k, v)
+		cc.logger.Debug("Argument provided: %s = %v", k, v)
 	}
 
 	// Ensure all parameters have at least empty values if not provided
@@ -117,13 +117,13 @@ func (cc *CompiledConstraints) Evaluate(args map[string]interface{}, params map[
 			switch param.Type {
 			case "string", "":
 				evalArgs[name] = ""
-				cc.logger.Printf("Adding default empty string for missing parameter: %s", name)
+				cc.logger.Debug("Adding default empty string for missing parameter: %s", name)
 			case "number", "integer":
 				evalArgs[name] = 0.0
-				cc.logger.Printf("Adding default zero value for missing parameter: %s", name)
+				cc.logger.Debug("Adding default zero value for missing parameter: %s", name)
 			case "boolean":
 				evalArgs[name] = false
-				cc.logger.Printf("Adding default false value for missing parameter: %s", name)
+				cc.logger.Debug("Adding default false value for missing parameter: %s", name)
 			}
 		}
 	}
@@ -133,17 +133,17 @@ func (cc *CompiledConstraints) Evaluate(args map[string]interface{}, params map[
 	// Evaluate each constraint program
 	for i, prg := range cc.programs {
 		// Execute the program
-		cc.logger.Printf("Evaluating constraint #%d: %s", i+1, cc.expressions[i])
+		cc.logger.Debug("Evaluating constraint #%d: %s", i+1, cc.expressions[i])
 		val, _, err := prg.Eval(evalArgs)
 		if err != nil {
-			cc.logger.Printf("Constraint #%d evaluation error: %v", i+1, err)
+			cc.logger.Debug("Constraint #%d evaluation error: %v", i+1, err)
 			return false, nil, fmt.Errorf("constraint evaluation error: %w", err)
 		}
 
 		// Check if the result is a boolean and is true
 		boolVal, ok := val.Value().(bool)
 		if !ok {
-			cc.logger.Printf("Constraint #%d did not evaluate to a boolean", i+1)
+			cc.logger.Debug("Constraint #%d did not evaluate to a boolean", i+1)
 			return false, nil, fmt.Errorf("constraint did not evaluate to a boolean")
 		}
 
@@ -151,15 +151,15 @@ func (cc *CompiledConstraints) Evaluate(args map[string]interface{}, params map[
 			// If any constraint fails, add it to the failed constraints list
 			failureMsg := fmt.Sprintf("%s (with values: %s)", cc.expressions[i], formatArgValues(evalArgs))
 			failedConstraints = append(failedConstraints, failureMsg)
-			cc.logger.Printf("Constraint #%d failed evaluation: %s", i+1, failureMsg)
+			cc.logger.Debug("Constraint #%d failed evaluation: %s", i+1, failureMsg)
 		} else {
-			cc.logger.Printf("Constraint #%d passed evaluation", i+1)
+			cc.logger.Debug("Constraint #%d passed evaluation", i+1)
 		}
 	}
 
 	// Return failure if any constraints failed
 	if len(failedConstraints) > 0 {
-		cc.logger.Printf("%d constraints failed evaluation", len(failedConstraints))
+		cc.logger.Debug("%d constraints failed evaluation", len(failedConstraints))
 		return false, failedConstraints, nil
 	}
 

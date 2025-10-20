@@ -19,8 +19,8 @@ func RecoverPanic() bool {
 
 		// Log panic information to the logger if provided
 		if logger != nil {
-			logger.Printf("PANIC RECOVERED: %v", r)
-			logger.Printf("Stack trace:\n%s", stackTrace)
+			logger.Debug("PANIC RECOVERED: %v", r)
+			logger.Debug("Stack trace:\n%s", stackTrace)
 		}
 
 		// Always log to stderr for immediate visibility

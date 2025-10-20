@@ -460,7 +460,7 @@ func (s *Server) ExecuteTool(ctx context.Context, toolName string, args map[stri
 	s.logger.Debug("Sending JSON-RPC request: %s", string(jsonBytes))
 
 	// Execute the tool through the MCP server
-	s.logger.Info("Executing tool: %s", toolName)
+	s.logger.Debug("Executing tool: %s", toolName)
 
 	// We need to handle the request manually since we don't have direct access to tool handlers
 	jsonMsg := s.mcpServer.HandleMessage(ctx, mustMarshalJSON(jsonRpcRequest))

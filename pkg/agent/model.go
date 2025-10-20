@@ -149,7 +149,7 @@ type GenericProvider struct {
 }
 
 func (p *GenericProvider) InitializeClient(config ModelConfig, logger *common.Logger) (*openai.Client, error) {
-	logger.Info("Unknown model class '%s', treating as OpenAI-compatible", p.class)
+	logger.Warn("Unknown model class '%s', treating as OpenAI-compatible", p.class)
 
 	apiKey := config.APIKey
 	if apiKey == "" {

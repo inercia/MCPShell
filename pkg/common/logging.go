@@ -104,8 +104,8 @@ func NewLogger(prefix string, filePath string, level LogLevel, truncate bool) (*
 
 	// Log the initialization
 	if filePath != "" && level >= LogLevelInfo {
-		logger.Printf("----------------------------")
-		logger.Printf("Logging initialized to file: %s", filePath)
+		logger.Debug("----------------------------")
+		logger.Debug("Logging initialized to file: %s", filePath)
 	}
 
 	return logger, nil
@@ -130,6 +130,13 @@ func (l *Logger) Debug(format string, v ...interface{}) {
 func (l *Logger) Info(format string, v ...interface{}) {
 	if l.level >= LogLevelInfo {
 		l.Printf("[INFO] "+format, v...)
+	}
+}
+
+// Warn logs a warning message
+func (l *Logger) Warn(format string, v ...interface{}) {
+	if l.level >= LogLevelInfo {
+		l.Printf("[WARN] "+format, v...)
 	}
 }
 

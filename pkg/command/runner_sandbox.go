@@ -62,14 +62,14 @@ func NewRunnerSandboxExec(options RunnerOptions, logger *common.Logger) (*Runner
 	// Parse the sandbox profile template
 	profileTpl, err := template.New("sandbox-profile").Parse(sandboxProfileTemplate)
 	if err != nil {
-		logger.Printf("Failed to parse sandbox profile template: %v", err)
+		logger.Debug("Failed to parse sandbox profile template: %v", err)
 		return nil, err
 	}
 
 	// Parse sandbox-specific options
 	sandboxOpts, err := NewRunnerSandboxExecOptions(options)
 	if err != nil {
-		logger.Printf("Failed to parse sandbox options: %v", err)
+		logger.Debug("Failed to parse sandbox options: %v", err)
 		return nil, fmt.Errorf("failed to parse sandbox options: %w", err)
 	}
 
@@ -112,7 +112,7 @@ func (r *RunnerSandboxExec) Run(ctx context.Context, shell string, command strin
 			// Add parent directory if not already in the list
 			if !contains(r.options.AllowReadFolders, dir) {
 				r.options.AllowReadFolders = append(r.options.AllowReadFolders, dir)
-				r.logger.Printf("[DEBUG] Added parent directory to allow list: %s", dir)
+				r.logger.Debug("[DEBUG] Added parent directory to allow list: %s", dir)
 			}
 		}
 	}
@@ -126,7 +126,7 @@ func (r *RunnerSandboxExec) Run(ctx context.Context, shell string, command strin
 			// Add parent directory if not already in the list
 			if !contains(r.options.AllowWriteFolders, dir) {
 				r.options.AllowWriteFolders = append(r.options.AllowWriteFolders, dir)
-				r.logger.Printf("[DEBUG] Added parent directory to allow list: %s", dir)
+				r.logger.Debug("[DEBUG] Added parent directory to allow list: %s", dir)
 			}
 		}
 	}
@@ -134,39 +134,39 @@ func (r *RunnerSandboxExec) Run(ctx context.Context, shell string, command strin
 	// Generate the profile by rendering the template
 	var profileBuf bytes.Buffer
 	if err := r.profileTpl.Execute(&profileBuf, r.options); err != nil {
-		r.logger.Printf("Failed to render sandbox profile template: %v", err)
+		r.logger.Debug("Failed to render sandbox profile template: %v", err)
 		return "", fmt.Errorf("failed to render sandbox profile: %w", err)
 	}
 
 	profile := profileBuf.String()
-	r.logger.Printf("Sandbox options: %+v", r.options)
-	r.logger.Printf("Generated sandbox profile:\n%s", profile)
+	r.logger.Debug("Sandbox options: %+v", r.options)
+	r.logger.Debug("Generated sandbox profile:\n%s", profile)
 
 	// Create a temporary file for the sandbox profile
 	profileFile, err := os.CreateTemp("", "sandbox-profile-*.sb")
 	if err != nil {
-		r.logger.Printf("Failed to create temporary profile file: %v", err)
+		r.logger.Debug("Failed to create temporary profile file: %v", err)
 		return "", fmt.Errorf("failed to create temporary profile file: %w", err)
 	}
 	defer func() {
 		profileFilePath := profileFile.Name()
 		if err := profileFile.Close(); err != nil {
-			r.logger.Printf("Warning: failed to close profile file: %v", err)
+			r.logger.Debug("Warning: failed to close profile file: %v", err)
 		}
 		if err := os.Remove(profileFilePath); err != nil {
-			r.logger.Printf("Warning: failed to remove temporary profile file: %v", err)
+			r.logger.Debug("Warning: failed to remove temporary profile file: %v", err)
 		}
 	}()
 
 	// Write the profile to the temporary file
 	if _, err := profileFile.WriteString(profile); err != nil {
-		r.logger.Printf("Failed to write profile to temporary file: %v", err)
+		r.logger.Debug("Failed to write profile to temporary file: %v", err)
 		return "", fmt.Errorf("failed to write profile to temporary file: %w", err)
 	}
 
 	// Flush data to ensure it's written to disk
 	if err := profileFile.Sync(); err != nil {
-		r.logger.Printf("Failed to sync profile file: %v", err)
+		r.logger.Debug("Failed to sync profile file: %v", err)
 		return "", fmt.Errorf("failed to sync profile file: %w", err)
 	}
 
@@ -174,54 +174,54 @@ func (r *RunnerSandboxExec) Run(ctx context.Context, shell string, command strin
 
 	// Check if we can optimize by running a single executable directly
 	if isSingleExecutableCommand(fullCmd) {
-		r.logger.Printf("Optimization: running single executable command directly: %s", fullCmd)
+		r.logger.Debug("Optimization: running single executable command directly: %s", fullCmd)
 		execCmd = exec.CommandContext(ctx, "sandbox-exec", "-f", profileFile.Name(), fullCmd)
 	} else {
 		// Create a temporary file for the command
 		tmpScript, err := os.CreateTemp("", "sandbox-script-*.sh")
 		if err != nil {
-			r.logger.Printf("Failed to create temporary command file: %v", err)
+			r.logger.Debug("Failed to create temporary command file: %v", err)
 			return "", fmt.Errorf("failed to create temporary command file: %w", err)
 		}
 		// Ensure temporary file is deleted when this function exits
 		defer func() {
 			tmpScriptPath := tmpScript.Name()
 			if err := tmpScript.Close(); err != nil {
-				r.logger.Printf("Warning: failed to close script file: %v", err)
+				r.logger.Debug("Warning: failed to close script file: %v", err)
 			}
 			if err := os.Remove(tmpScriptPath); err != nil {
-				r.logger.Printf("Warning: failed to remove temporary script file: %v", err)
+				r.logger.Debug("Warning: failed to remove temporary script file: %v", err)
 			}
 		}()
 
 		// Write the command to the temporary file
 		if _, err := tmpScript.WriteString(fullCmd); err != nil {
-			r.logger.Printf("Failed to write command to temporary file: %v", err)
+			r.logger.Debug("Failed to write command to temporary file: %v", err)
 			return "", fmt.Errorf("failed to write command to temporary file: %w", err)
 		}
 
 		// Flush data to ensure it's written to disk
 		if err := tmpScript.Sync(); err != nil {
-			r.logger.Printf("Failed to sync script file: %v", err)
+			r.logger.Debug("Failed to sync script file: %v", err)
 			return "", fmt.Errorf("failed to sync script file: %w", err)
 		}
 
 		// Make the temporary file executable
 		if err := os.Chmod(tmpScript.Name(), 0o700); err != nil {
-			r.logger.Printf("Failed to make temporary file executable: %v", err)
+			r.logger.Debug("Failed to make temporary file executable: %v", err)
 			return "", fmt.Errorf("failed to make temporary file executable: %w", err)
 		}
 
 		execCmd = exec.CommandContext(ctx, "sandbox-exec", "-f", profileFile.Name(), tmpScript.Name())
 	}
 
-	r.logger.Printf("Created command: %s", execCmd.String())
+	r.logger.Debug("Created command: %s", execCmd.String())
 
 	// Set environment variables if provided
 	if len(env) > 0 {
-		r.logger.Printf("Adding %d environment variables to command", len(env))
+		r.logger.Debug("Adding %d environment variables to command", len(env))
 		for _, e := range env {
-			r.logger.Printf("... adding environment variable: %s", e)
+			r.logger.Debug("... adding environment variable: %s", e)
 		}
 		execCmd.Env = append(os.Environ(), env...)
 	}
@@ -232,25 +232,25 @@ func (r *RunnerSandboxExec) Run(ctx context.Context, shell string, command strin
 	execCmd.Stderr = &stderr
 
 	// Run the command
-	r.logger.Printf("Executing command")
+	r.logger.Debug("Executing command")
 
 	if err := execCmd.Run(); err != nil {
 		// If there's error output, include it in the error
 		if stderr.Len() > 0 {
 			errMsg := strings.TrimSpace(stderr.String())
-			r.logger.Printf("Command failed with stderr: %s", errMsg)
+			r.logger.Debug("Command failed with stderr: %s", errMsg)
 			return "", errors.New(errMsg)
 		}
-		r.logger.Printf("Command failed with error: %v", err)
+		r.logger.Debug("Command failed with error: %v", err)
 		return "", err
 	}
 
 	// Get the output
 	outputStr := strings.TrimSpace(stdout.String())
 
-	r.logger.Printf("Command executed successfully, output length: %d bytes", len(outputStr))
+	r.logger.Debug("Command executed successfully, output length: %d bytes", len(outputStr))
 	if stderr.Len() > 0 {
-		r.logger.Printf("Command generated stderr (but no error): %s", strings.TrimSpace(stderr.String()))
+		r.logger.Debug("Command generated stderr (but no error): %s", strings.TrimSpace(stderr.String()))
 	}
 
 	// Return the stdout output

@@ -39,7 +39,7 @@ func CreateCagentRuntime(
 	userPrompt string,
 	logger *common.Logger,
 ) (*CagentRuntime, error) {
-	logger.Info("Creating cagent single-agent runtime")
+	logger.Debug("Creating cagent single-agent runtime")
 
 	// Use orchestrator config for the single agent
 	agentLLM, err := initializeCagentModel(ctx, orchestratorConfig, logger)
@@ -54,7 +54,7 @@ func CreateCagentRuntime(
 		return nil, fmt.Errorf("failed to get MCP tools: %w", err)
 	}
 
-	logger.Info("Creating single agent with %d MCP tools", len(tools))
+	logger.Debug("Creating single agent with %d MCP tools", len(tools))
 
 	// Get system prompts - use tool-runner prompt since this agent will execute tools
 	// Use config prompts if provided, otherwise use embedded default
@@ -103,7 +103,7 @@ Remember: This is a multi-step investigation. Keep calling tools iteratively unt
 
 	sess := session.New(session.WithUserMessage("", enhancedPrompt))
 
-	logger.Info("Cagent single-agent runtime created successfully")
+	logger.Debug("Cagent single-agent runtime created successfully")
 
 	return &CagentRuntime{
 		runtime: rt,
@@ -114,13 +114,25 @@ Remember: This is a multi-step investigation. Keep calling tools iteratively unt
 
 // RunStream starts the streaming runtime and returns the event channel
 func (cr *CagentRuntime) RunStream(ctx context.Context) <-chan runtime.Event {
-	cr.logger.Info("Starting cagent runtime stream")
+	cr.logger.Debug("Starting cagent runtime stream")
 	return cr.runtime.RunStream(ctx, cr.session)
 }
 
 // Runtime returns the underlying cagent runtime for advanced operations like Resume
 func (cr *CagentRuntime) Runtime() runtime.Runtime {
 	return cr.runtime
+}
+
+// ContinueConversation adds a new user message to the session and continues the conversation
+func (cr *CagentRuntime) ContinueConversation(userMessage string) error {
+	cr.logger.Debug("Adding user message to continue conversation")
+
+	// Add the user message to the existing session
+	msg := session.UserMessage("", userMessage)
+	cr.session.AddMessage(msg)
+
+	cr.logger.Debug("User message added to session, ready for next stream")
+	return nil
 }
 
 // initializeCagentModel creates a cagent-compatible model provider from our ModelConfig
@@ -164,7 +176,7 @@ func initializeCagentModel(ctx context.Context, config ModelConfig, logger *comm
 		logger.Debug("Setting base URL: %s", config.APIURL)
 	}
 
-	logger.Info("Initializing cagent model: provider=%s, model=%s",
+	logger.Debug("Initializing cagent model: provider=%s, model=%s",
 		cagentModelConfig.Provider, cagentModelConfig.Model)
 
 	// Create environment provider for API keys
@@ -182,7 +194,7 @@ func initializeCagentModel(ctx context.Context, config ModelConfig, logger *comm
 		return nil, fmt.Errorf("failed to create model provider '%s': %w", cagentModelConfig.Provider, err)
 	}
 
-	logger.Info("Successfully initialized %s provider for model %s",
+	logger.Debug("Successfully initialized %s provider for model %s",
 		cagentModelConfig.Provider, cagentModelConfig.Model)
 	return client, nil
 }

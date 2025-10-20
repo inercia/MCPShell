@@ -72,7 +72,7 @@ func NewRunner(runnerType RunnerType, options RunnerOptions, logger *common.Logg
 	// Check implicit requirements for the created runner
 	if err := runner.CheckImplicitRequirements(); err != nil {
 		if logger != nil {
-			logger.Printf("Runner %s failed implicit requirements check: %v", runnerType, err)
+			logger.Debug("Runner %s failed implicit requirements check: %v", runnerType, err)
 		}
 		return nil, err
 	}

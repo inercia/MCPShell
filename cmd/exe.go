@@ -67,7 +67,7 @@ will be reported.
 
 		// Get the tool name
 		toolName := args[0]
-		logger.Info("Executing tool: %s", toolName)
+		logger.Debug("Executing tool: %s", toolName)
 
 		// Load the configuration file(s) (local or remote)
 		localConfigPath, cleanup, err := config.ResolveMultipleConfigPaths(toolsFiles, logger)

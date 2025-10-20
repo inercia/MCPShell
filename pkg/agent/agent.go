@@ -102,6 +102,8 @@ func (a *Agent) Run(ctx context.Context, userInput chan string, agentOutput chan
 		defer singleRunCancel()
 		ctx = singleRunCtx
 		a.logger.Info("Running in one-shot mode with 120s safety timeout")
+	} else {
+		a.logger.Info("Running in interactive mode (will wait for user input to continue)")
 	}
 
 	// Create cagent runtime with multi-agent system
@@ -112,37 +114,65 @@ func (a *Agent) Run(ctx context.Context, userInput chan string, agentOutput chan
 		return fmt.Errorf("failed to create cagent runtime: %w", err)
 	}
 
-	// Start streaming events from cagent
-	a.logger.Info("Starting cagent event stream")
-	events := cagentRT.RunStream(ctx)
+	// Conversation loop - run until Once mode or context cancellation
+	for {
+		// Start streaming events from cagent
+		a.logger.Debug("Starting cagent event stream")
+		events := cagentRT.RunStream(ctx)
 
-	// Process events and send output
-	eventCount := 0
-	for event := range events {
-		eventCount++
-		a.logger.Debug("Received event #%d: %T", eventCount, event)
+		// Process events and send output
+		eventCount := 0
+		for event := range events {
+			eventCount++
+			a.logger.Debug("Received event #%d: %T", eventCount, event)
 
-		// Handle tool call confirmations - auto-approve tools
-		if _, ok := event.(*runtime.ToolCallConfirmationEvent); ok {
-			a.logger.Debug("Auto-approving tool execution")
-			cagentRT.Runtime().Resume(ctx, "approve-session")
+			// Handle tool call confirmations - auto-approve tools
+			if _, ok := event.(*runtime.ToolCallConfirmationEvent); ok {
+				a.logger.Debug("Auto-approving tool execution")
+				cagentRT.Runtime().Resume(ctx, "approve-session")
+			}
+
+			if err := a.handleCagentEvent(event, agentOutput); err != nil {
+				a.logger.Error("Error handling event: %v", err)
+				// Continue processing other events
+			}
+		}
+		a.logger.Debug("Event stream completed, processed %d events", eventCount)
+
+		// In one-shot mode, exit after first response
+		if a.config.Once {
+			a.logger.Info("One-shot mode: exiting after first response")
+			return nil
 		}
 
-		if err := a.handleCagentEvent(event, agentOutput); err != nil {
-			a.logger.Error("Error handling event: %v", err)
-			// Continue processing other events
+		// In interactive mode, wait for user input to continue
+		a.logger.Debug("Waiting for user input to continue conversation...")
+		promptColor := color.New(color.Bold, color.FgHiCyan)
+		agentOutput <- fmt.Sprintf("\n%s", promptColor.Sprint("💬 Enter your next question (or Ctrl+C to exit): "))
+
+		select {
+		case <-ctx.Done():
+			a.logger.Info("Context cancelled, exiting")
+			return ctx.Err()
+		case nextInput, ok := <-userInput:
+			if !ok {
+				a.logger.Info("User input channel closed, exiting")
+				return nil
+			}
+			if nextInput == "" {
+				continue // Skip empty input
+			}
+
+			// Add the new user message to the session to continue the conversation
+			a.logger.Debug("Received user input: %s", nextInput)
+			if err := cagentRT.ContinueConversation(nextInput); err != nil {
+				a.logger.Error("Failed to continue conversation: %v", err)
+				agentOutput <- fmt.Sprintf("Error: %v\n", err)
+				return fmt.Errorf("failed to continue conversation: %w", err)
+			}
+			// Loop will continue with the updated session
 		}
 	}
-	a.logger.Info("Event stream completed, processed %d events", eventCount)
-
-	a.logger.Info("Cagent runtime completed")
-
-	// In one-shot mode, close the userInput channel
-	if a.config.Once {
-		close(userInput)
-	}
-
-	return nil
 }
 
 // handleCagentEvent processes a single cagent event and sends appropriate output
@@ -184,6 +214,8 @@ func (a *Agent) handleCagentEvent(event interface{}, agentOutput chan string) er
 
 	case *runtime.ToolCallConfirmationEvent:
 		// Tool is being confirmed/executed
+		// Add newline before logs to separate from agent output
+		agentOutput <- "\n"
 		a.logger.Debug("Tool call confirmed for agent: %s", e.AgentName)
 
 	case *runtime.ToolCallResponseEvent:
@@ -192,9 +224,7 @@ func (a *Agent) handleCagentEvent(event interface{}, agentOutput chan string) er
 		if len(response) > 1000 {
 			response = response[:1000] + "... (truncated)"
 		}
-		agentOutput <- fmt.Sprintf("%s\n%s\n",
-			blue.Sprint("✓ Tool result:"),
-			response)
+		agentOutput <- fmt.Sprintf("%s\n%s\n", blue.Sprint("✓ Tool result:"), response)
 
 	case *runtime.StreamStartedEvent:
 		// Agent started processing - use magenta for agent status

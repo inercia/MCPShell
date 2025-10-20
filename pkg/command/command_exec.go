@@ -184,7 +184,7 @@ func (h *CommandHandler) executeToolCommand(ctx context.Context, params map[stri
 		h.logger.Debug("Final output with prefix:\n--------------------------------\n%s\n--------------------------------", finalOutput)
 	}
 
-	h.logger.Info("Tool execution completed successfully")
+	h.logger.Debug("Tool execution completed successfully")
 	return finalOutput, nil, nil
 }
 

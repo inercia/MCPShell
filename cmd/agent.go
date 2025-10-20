@@ -132,10 +132,7 @@ $ mcpshell agent --tools=examples/config.yaml \
 
 If a model is configured as default in the agent configuration file, you can omit the --model flag:
 
-$ mcpshell agent --tools=examples/config.yaml \
-     --user-prompt "I am having trouble with my computer. It is slow and I think it is due to the CPU usage."
-
-You can also provide the initial user prompt as positional arguments:
+You can provide initial user prompt as positional arguments:
 
 $ mcpshell agent I am having trouble with my computer. It is slow and I think it is due to the CPU usage.
 
@@ -250,7 +247,10 @@ The agent will try to debug the issue with the given tools.
 		go func() {
 			defer wg.Done()
 			if err := agentInstance.Run(ctx, userInput, agentOutput); err != nil {
-				logger.Error(color.HiRedString("Agent encountered an error: %v", err))
+				// Don't log context cancellation as an error - it's an expected exit condition
+				if err != context.Canceled && err != context.DeadlineExceeded {
+					logger.Error(color.HiRedString("Agent encountered an error: %v", err))
+				}
 				// Cancel context to abort all goroutines on fatal errors
 				cancel()
 			}

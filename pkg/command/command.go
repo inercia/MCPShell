@@ -84,7 +84,7 @@ func NewCommandHandler(tool config.Tool, params map[string]common.ParamConfig, s
 	var err error
 
 	if len(tool.Config.Constraints) > 0 {
-		logger.Info("Compiling %d constraints for tool '%s'", len(tool.Config.Constraints), tool.MCPTool.Name)
+		logger.Debug("Compiling %d constraints for tool '%s'", len(tool.Config.Constraints), tool.MCPTool.Name)
 
 		compiled, err = common.NewCompiledConstraints(tool.Config.Constraints, params, logger)
 		if err != nil {
@@ -92,7 +92,7 @@ func NewCommandHandler(tool config.Tool, params map[string]common.ParamConfig, s
 			return nil, fmt.Errorf("constraint compilation error: %w", err)
 		}
 
-		logger.Info("Successfully compiled constraints for tool '%s'", tool.MCPTool.Name)
+		logger.Debug("Successfully compiled constraints for tool '%s'", tool.MCPTool.Name)
 	}
 
 	// Get the effective command, runner type, and options from the tool

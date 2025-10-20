@@ -74,27 +74,27 @@ func (r *RunnerExec) Run(ctx context.Context, shell string,
 	var tmpDir string
 
 	if isSingleExecutableCommand(command) {
-		r.logger.Printf("Optimization: running single executable command directly: %s", command)
+		r.logger.Debug("Optimization: running single executable command directly: %s", command)
 		execCmd = exec.CommandContext(ctx, command)
 		if len(env) > 0 {
-			r.logger.Printf("Adding %d environment variables to command", len(env))
+			r.logger.Debug("Adding %d environment variables to command", len(env))
 			for _, e := range env {
-				r.logger.Printf("... adding environment variable: %s", e)
+				r.logger.Debug("... adding environment variable: %s", e)
 			}
 			execCmd.Env = append(os.Environ(), env...)
 		}
-		r.logger.Printf("Created command: %s", command)
+		r.logger.Debug("Created command: %s", command)
 	} else if tmpfile {
 		// Create a temporary file for the command
 		var err error
 		tmpDir, err = os.MkdirTemp("", "mcpshell")
 		if err != nil {
-			r.logger.Printf("Failed to create temp directory: %v", err)
+			r.logger.Debug("Failed to create temp directory: %v", err)
 			return "", err
 		}
 		defer func() {
 			if err := os.RemoveAll(tmpDir); err != nil {
-				r.logger.Printf("Failed to remove temporary directory: %v", err)
+				r.logger.Debug("Failed to remove temporary directory: %v", err)
 			}
 		}()
 
@@ -106,34 +106,34 @@ func (r *RunnerExec) Run(ctx context.Context, shell string,
 		tmpFile := filepath.Join(tmpDir, "script.sh")
 		err = os.WriteFile(tmpFile, []byte(scriptContent.String()), 0o700)
 		if err != nil {
-			r.logger.Printf("Failed to write temporary file: %v", err)
+			r.logger.Debug("Failed to write temporary file: %v", err)
 			return "", err
 		}
 
-		r.logger.Printf("Created temporary script file at: %s", tmpFile)
+		r.logger.Debug("Created temporary script file at: %s", tmpFile)
 
 		// Set up the command
 		configShell := getShell(shell)
-		r.logger.Printf("Using shell: %s", configShell)
+		r.logger.Debug("Using shell: %s", configShell)
 
 		// Create the command to execute the script file
 		execCmd = exec.CommandContext(ctx, configShell, tmpFile)
-		r.logger.Printf("Created command: %s %s", configShell, tmpFile)
+		r.logger.Debug("Created command: %s %s", configShell, tmpFile)
 	} else {
 		// Execute the command directly without a temporary file
 		configShell := getShell(shell)
-		r.logger.Printf("Using shell: %s", configShell)
+		r.logger.Debug("Using shell: %s", configShell)
 
 		// Simple command without arguments
 		execCmd = exec.CommandContext(ctx, configShell, "-c", command)
-		r.logger.Printf("Created command: %s -c %s", configShell, command)
+		r.logger.Debug("Created command: %s -c %s", configShell, command)
 	}
 
 	// Set environment variables if provided
 	if len(env) > 0 {
-		r.logger.Printf("Adding %d environment variables to command", len(env))
+		r.logger.Debug("Adding %d environment variables to command", len(env))
 		for _, e := range env {
-			r.logger.Printf("... adding environment variable: %s", e)
+			r.logger.Debug("... adding environment variable: %s", e)
 		}
 		execCmd.Env = append(os.Environ(), env...)
 	}
@@ -144,26 +144,26 @@ func (r *RunnerExec) Run(ctx context.Context, shell string,
 	execCmd.Stderr = &stderr
 
 	// Run the command
-	r.logger.Printf("Executing command")
+	r.logger.Debug("Executing command")
 
 	err := execCmd.Run()
 	if err != nil {
 		// If there's error output, include it in the error
 		if stderr.Len() > 0 {
 			errMsg := strings.TrimSpace(stderr.String())
-			r.logger.Printf("Command failed with stderr: %s", errMsg)
+			r.logger.Debug("Command failed with stderr: %s", errMsg)
 			return "", errors.New(errMsg)
 		}
-		r.logger.Printf("Command failed with error: %v", err)
+		r.logger.Debug("Command failed with error: %v", err)
 		return "", err
 	}
 
 	// Get the output
 	output := strings.TrimSpace(stdout.String())
 
-	r.logger.Printf("Command executed successfully, output length: %d bytes", len(output))
+	r.logger.Debug("Command executed successfully, output length: %d bytes", len(output))
 	if stderr.Len() > 0 {
-		r.logger.Printf("Command generated stderr (but no error): %s", strings.TrimSpace(stderr.String()))
+		r.logger.Debug("Command generated stderr (but no error): %s", strings.TrimSpace(stderr.String()))
 	}
 
 	// Return the stdout output
