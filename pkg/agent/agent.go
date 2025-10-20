@@ -224,7 +224,10 @@ func (a *Agent) handleCagentEvent(event interface{}, agentOutput chan string) er
 		if len(response) > 1000 {
 			response = response[:1000] + "... (truncated)"
 		}
-		agentOutput <- fmt.Sprintf("%s\n%s\n", blue.Sprint("✓ Tool result:"), response)
+		agentOutput <- fmt.Sprintf("%s\n%s\n%s\n",
+			blue.Sprint("--- tool result BEGIN ---"),
+			blue.Sprint(response),
+			blue.Sprint("--- tool result END ---"))
 
 	case *runtime.StreamStartedEvent:
 		// Agent started processing - use magenta for agent status

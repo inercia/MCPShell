@@ -13,11 +13,24 @@ CONFIG_FILE="test_agent"  # Will look for test_agent.yaml in MCPSHELL_TOOLS_DIR
 LOG_FILE="$TESTS_ROOT/agent_test_output.log"
 TEST_NAME="test_agent"
 
-# LLM configuration
-# by default we will use the local Ollama LLM
-OPENAI_API_BASE="${OPENAI_API_BASE:-http://localhost:11434/v1}"
-OPENAI_API_KEY="${OPENAI_API_KEY:-ollama}"
-MODEL="${MODEL:-qwen3:14b}"
+# Model resolution:
+# 1. Use MCPSHELL_AGENT_MODEL if set
+# 2. Otherwise, let agent use default from config file
+MODEL_FLAG=""
+if [ -n "$MCPSHELL_AGENT_MODEL" ]; then
+    MODEL_FLAG="--model $MCPSHELL_AGENT_MODEL"
+fi
+
+# API configuration flags - only set if explicitly provided
+# This allows the model config to provide its own API URL and key
+API_KEY_FLAG=""
+API_URL_FLAG=""
+if [ -n "$OPENAI_API_KEY" ]; then
+    API_KEY_FLAG="--openai-api-key $OPENAI_API_KEY"
+fi
+if [ -n "$OPENAI_API_BASE" ]; then
+    API_URL_FLAG="--openai-api-url $OPENAI_API_BASE"
+fi
 
 #####################################################################################
 # Start the test
@@ -27,15 +40,52 @@ testcase "$TEST_NAME"
 info "Testing MCPShell agent with config: $CONFIG_FILE (using MCPSHELL_TOOLS_DIR=$MCPSHELL_TOOLS_DIR)"
 
 separator
-info "1. Checking the URL of the LLM"
+info "1. Checking LLM availability using 'agent info --check'"
 separator
 
-# Try to access the LLM URL
-if curl -s -m 5 "$OPENAI_API_BASE/models" 2>/dev/null | grep -q "data"; then
-    success "... LLM is available at $OPENAI_API_BASE. Continuing... "
+# Use the agent info --check command to test LLM connectivity
+# This is more robust than curl as it tests the actual agent configuration
+CHECK_OUTPUT=$("$CLI_BIN" --tools "$CONFIG_FILE" agent \
+    $MODEL_FLAG \
+    $API_KEY_FLAG \
+    $API_URL_FLAG \
+    info --check --log-level none 2>&1)
+CHECK_RESULT=$?
+
+# Extract the actual model being used from the output
+ACTUAL_MODEL=$(echo "$CHECK_OUTPUT" | grep "^  Model:" | head -1 | awk '{print $2}')
+
+if [ $CHECK_RESULT -eq 0 ]; then
+    if [ -n "$OPENAI_API_BASE" ]; then
+        success "LLM is available and responding (model: ${ACTUAL_MODEL:-default} at $OPENAI_API_BASE)"
+    else
+        success "LLM is available and responding (model: ${ACTUAL_MODEL:-default})"
+    fi
+    # Show connectivity info if available
+    if echo "$CHECK_OUTPUT" | grep -q "Connected"; then
+        echo "$CHECK_OUTPUT" | grep "Status:" || true
+        echo "$CHECK_OUTPUT" | grep "Response:" || true
+    fi
 else
-    warning "LLM is not available at $OPENAI_API_BASE"
-    warning "Skipping the rest of the tests"
+    warning "═══════════════════════════════════════════════════════════════════"
+    warning "LLM is not available or not responding"
+    warning ""
+    warning "Configuration used:"
+    warning "  Model: ${ACTUAL_MODEL:-default from config}"
+    if [ -n "$OPENAI_API_BASE" ]; then
+        warning "  API URL: $OPENAI_API_BASE (override)"
+    else
+        warning "  API URL: from model config"
+    fi
+    warning ""
+    warning "To run agent tests, ensure you have an LLM available:"
+    warning "  - For local testing: Install Ollama (https://ollama.ai)"
+    warning "  - For remote LLMs: Set OPENAI_API_KEY and OPENAI_API_BASE"
+    warning ""
+    warning "Example: MCPSHELL_AGENT_MODEL=qwen3:14b OPENAI_API_BASE=http://localhost:11434/v1 ./test_agent.sh"
+    warning "═══════════════════════════════════════════════════════════════════"
+    warning ""
+    warning "Skipping agent tests due to unavailable LLM"
     exit 0
 fi
 
@@ -73,7 +123,7 @@ success "Direct tool execution passed: File created successfully"
 echo "$CONTENT"
 
 separator
-info "3. Running agent with local Ollama LLM"
+info "3. Running agent with real LLM"
 separator
 
 # Clean up previous log file if it exists
@@ -86,16 +136,16 @@ SYSTEM_PROMPT="You are an assistant that helps manage files."
 info "Starting agent interaction..."
 info "System prompt: $SYSTEM_PROMPT"
 info "User prompt: $USER_PROMPT"
-info "Model: $MODEL"
+info "Model: ${MCPSHELL_AGENT_MODEL:-default from config}"
 
 "$CLI_BIN" --tools "$CONFIG_FILE" agent \
     --system-prompt "$SYSTEM_PROMPT" \
     --user-prompt "$USER_PROMPT" \
-    --model "$MODEL" \
+    $MODEL_FLAG \
     --once \
     --logfile "$LOG_FILE" \
-    --openai-api-key "$OPENAI_API_KEY" \
-    --openai-api-url "$OPENAI_API_BASE"
+    $API_KEY_FLAG \
+    $API_URL_FLAG
 
 AGENT_RESULT=$?
 info "Agent finished with exit code: $AGENT_RESULT"

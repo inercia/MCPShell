@@ -1,13 +1,19 @@
 package root
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
 	"path/filepath"
 
 	"github.com/spf13/cobra"
 
 	"github.com/inercia/MCPShell/pkg/agent"
 	"github.com/inercia/MCPShell/pkg/utils"
+)
+
+var (
+	agentConfigShowJSON bool
 )
 
 // agentConfigCommand is the parent command for agent configuration subcommands
@@ -64,6 +70,26 @@ $ mcpshell agent config create
 	},
 }
 
+// ConfigShowOutput holds the JSON output structure for config show
+type ConfigShowOutput struct {
+	ConfigurationFile string                `json:"configuration_file"`
+	Models            []ConfigShowModelInfo `json:"models"`
+	DefaultModel      *ConfigShowModelInfo  `json:"default_model,omitempty"`
+	Orchestrator      *ConfigShowModelInfo  `json:"orchestrator,omitempty"`
+	ToolRunner        *ConfigShowModelInfo  `json:"tool_runner,omitempty"`
+}
+
+// ConfigShowModelInfo holds model info for JSON output
+type ConfigShowModelInfo struct {
+	Name          string   `json:"name"`
+	Model         string   `json:"model"`
+	Class         string   `json:"class"`
+	Default       bool     `json:"default"`
+	APIKey        string   `json:"api_key_masked,omitempty"`
+	APIURL        string   `json:"api_url,omitempty"`
+	SystemPrompts []string `json:"system_prompts,omitempty"`
+}
+
 // agentConfigShowCommand displays the current agent configuration
 var agentConfigShowCommand = &cobra.Command{
 	Use:   "show",
@@ -75,8 +101,11 @@ Displays the current agent configuration in a pretty-printed format.
 The configuration is loaded from ~/.mcpshell/agent.yaml and parsed to show
 the available models, their settings, and which model is set as default.
 
-Example:
+Use --json flag to output in JSON format for easy parsing by other tools.
+
+Examples:
 $ mcpshell agent config show
+$ mcpshell agent config show --json
 `,
 	Args: cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -101,11 +130,26 @@ $ mcpshell agent config show
 
 		// Check if config is empty
 		if len(config.Agent.Models) == 0 {
+			if agentConfigShowJSON {
+				output := ConfigShowOutput{
+					ConfigurationFile: configPath,
+					Models:            []ConfigShowModelInfo{},
+				}
+				encoder := json.NewEncoder(os.Stdout)
+				encoder.SetIndent("", "  ")
+				return encoder.Encode(output)
+			}
+
 			fmt.Printf("Configuration file: %s\n", configPath)
 			fmt.Println()
 			fmt.Println("No agent configuration found.")
 			fmt.Println("Run 'mcpshell agent config create' to create a default configuration.")
 			return nil
+		}
+
+		// Output in JSON format if requested
+		if agentConfigShowJSON {
+			return outputConfigShowJSON(configPath, config)
 		}
 
 		// Pretty print the configuration
@@ -155,6 +199,91 @@ $ mcpshell agent config show
 	},
 }
 
+// outputConfigShowJSON outputs the configuration in JSON format
+func outputConfigShowJSON(configPath string, config *agent.Config) error {
+	output := ConfigShowOutput{
+		ConfigurationFile: configPath,
+		Models:            make([]ConfigShowModelInfo, 0, len(config.Agent.Models)),
+	}
+
+	// Add all models
+	for _, model := range config.Agent.Models {
+		modelInfo := ConfigShowModelInfo{
+			Name:    model.Name,
+			Model:   model.Model,
+			Class:   model.Class,
+			Default: model.Default,
+			APIURL:  model.APIURL,
+		}
+
+		if model.APIKey != "" {
+			modelInfo.APIKey = maskAPIKey(model.APIKey)
+		}
+
+		if model.Prompts.HasSystemPrompts() {
+			modelInfo.SystemPrompts = model.Prompts.System
+		}
+
+		output.Models = append(output.Models, modelInfo)
+	}
+
+	// Add default model
+	if defaultModel := config.GetDefaultModel(); defaultModel != nil {
+		modelInfo := ConfigShowModelInfo{
+			Name:    defaultModel.Name,
+			Model:   defaultModel.Model,
+			Class:   defaultModel.Class,
+			Default: defaultModel.Default,
+			APIURL:  defaultModel.APIURL,
+		}
+		if defaultModel.APIKey != "" {
+			modelInfo.APIKey = maskAPIKey(defaultModel.APIKey)
+		}
+		if defaultModel.Prompts.HasSystemPrompts() {
+			modelInfo.SystemPrompts = defaultModel.Prompts.System
+		}
+		output.DefaultModel = &modelInfo
+	}
+
+	// Add orchestrator model if defined
+	if orchestrator := config.GetOrchestratorModel(); orchestrator != nil {
+		modelInfo := ConfigShowModelInfo{
+			Name:   orchestrator.Name,
+			Model:  orchestrator.Model,
+			Class:  orchestrator.Class,
+			APIURL: orchestrator.APIURL,
+		}
+		if orchestrator.APIKey != "" {
+			modelInfo.APIKey = maskAPIKey(orchestrator.APIKey)
+		}
+		if orchestrator.Prompts.HasSystemPrompts() {
+			modelInfo.SystemPrompts = orchestrator.Prompts.System
+		}
+		output.Orchestrator = &modelInfo
+	}
+
+	// Add tool runner model if defined
+	if toolRunner := config.GetToolRunnerModel(); toolRunner != nil {
+		modelInfo := ConfigShowModelInfo{
+			Name:   toolRunner.Name,
+			Model:  toolRunner.Model,
+			Class:  toolRunner.Class,
+			APIURL: toolRunner.APIURL,
+		}
+		if toolRunner.APIKey != "" {
+			modelInfo.APIKey = maskAPIKey(toolRunner.APIKey)
+		}
+		if toolRunner.Prompts.HasSystemPrompts() {
+			modelInfo.SystemPrompts = toolRunner.Prompts.System
+		}
+		output.ToolRunner = &modelInfo
+	}
+
+	encoder := json.NewEncoder(os.Stdout)
+	encoder.SetIndent("", "  ")
+	return encoder.Encode(output)
+}
+
 // Helper function to mask API keys for security
 func maskAPIKey(key string) string {
 	if len(key) <= 8 {
@@ -175,4 +304,7 @@ func init() {
 	// Add create and show subcommands to agent config
 	agentConfigCommand.AddCommand(agentConfigCreateCommand)
 	agentConfigCommand.AddCommand(agentConfigShowCommand)
+
+	// Add flags to show command
+	agentConfigShowCommand.Flags().BoolVar(&agentConfigShowJSON, "json", false, "Output in JSON format")
 }

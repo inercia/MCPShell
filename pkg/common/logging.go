@@ -70,8 +70,15 @@ func NewLogger(prefix string, filePath string, level LogLevel, truncate bool) (*
 	var file *os.File
 	var err error
 
-	// Set up the log writer (file or discarded)
-	if filePath != "" {
+	// Set up the log writer - always use stderr unless LogLevelNone
+	if level == LogLevelNone {
+		writer = io.Discard
+	} else {
+		writer = os.Stderr
+	}
+
+	// If a file path is provided, also log to the file
+	if filePath != "" && level != LogLevelNone {
 		// Determine file open flags
 		flags := os.O_RDWR | os.O_CREATE
 		if truncate {
@@ -85,13 +92,8 @@ func NewLogger(prefix string, filePath string, level LogLevel, truncate bool) (*
 		if err != nil {
 			return nil, fmt.Errorf("failed to open log file: %w", err)
 		}
-		writer = file
-	} else if level == LogLevelNone {
-		// If no file and LogLevelNone, use a null writer
-		writer = io.Discard
-	} else {
-		// Otherwise, log to stderr
-		writer = os.Stderr
+		// Write to both stderr and file
+		writer = io.MultiWriter(os.Stderr, file)
 	}
 
 	// Create the logger

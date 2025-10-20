@@ -119,10 +119,25 @@ mcpshell agent --tools=examples/config.yaml \
 
 Settings are resolved in the following order (highest to lowest precedence):
 
-1. Command-line flags
+1. Command-line flags (`--model`, `--openai-api-key`, etc.)
+1. Environment variables (`MCPSHELL_AGENT_MODEL`, `OPENAI_API_KEY`, etc.)
 1. Configuration file settings
-1. Environment variables
 1. Default values
+
+### Environment Variables
+
+The following environment variables are supported:
+
+- `MCPSHELL_AGENT_MODEL`: Default model to use when `--model` flag is not provided
+- `OPENAI_API_KEY`: OpenAI API key (can be referenced in config with `${OPENAI_API_KEY}`)
+
+Example:
+
+```bash
+export MCPSHELL_AGENT_MODEL="gpt-4o"
+mcpshell agent --tools=examples/config.yaml \
+    --user-prompt "Help me debug a performance issue"
+```
 
 ## Configuration Management Commands
 
@@ -146,7 +161,7 @@ The default configuration includes:
 ### Show Current Configuration
 
 ```bash
-mcpshell agent config show
+mcpshell agent config show [--json]
 ```
 
 Displays the current agent configuration in a human-readable format, including:
@@ -156,7 +171,15 @@ Displays the current agent configuration in a human-readable format, including:
 - Which model is set as default
 - System prompts for each model
 
-Example output:
+**Flags:**
+
+- `--json`: Output configuration in JSON format for easy parsing by other tools
+
+**Example (human-readable):**
+
+```bash
+mcpshell agent config show
+```
 
 ```text
 Agent Configuration:

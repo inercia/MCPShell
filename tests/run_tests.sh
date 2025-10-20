@@ -6,6 +6,8 @@ source "$SCRIPT_DIR/common/common.sh"
 
 # Test files to run (now in subdirectories)
 TEST_FILES=(
+    "agent/test_agent_config.sh"
+    "agent/test_agent_info.sh"
     "agent/test_agent.sh"
     "exe/test_exe.sh"
     "exe/test_exe_empty_file.sh"

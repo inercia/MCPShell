@@ -190,39 +190,118 @@ mcp:
       output:
         prefix: "Traceroute to {{ .hostname }}:"
 
-    - name: "port_check"
-      description: "Check if a TCP port is open on a host"
+    - name: "portscan"
+      description: "Scan TCP ports on a host or IP range. Supports single ports, port ranges, and IP ranges. Uses nmap if available, falls back to netcat."
       params:
-        hostname:
+        target:
           type: string
-          description: "The hostname or IP address to check"
+          description: "Hostname, IP address, or IP range (e.g., 'example.com', '192.168.1.1', '192.168.1.0/24', '10.0.0.1-10')"
           required: true
-        port:
-          type: number
-          description: "The TCP port number to check"
+        ports:
+          type: string
+          description: "Port specification: single port '80', range '80-443', or comma-separated '22,80,443'"
           required: true
+        scan_type:
+          type: string
+          description: "Scan type: 'quick' (SYN scan, fast) or 'connect' (TCP connect, more compatible). Default: 'connect'"
       constraints:
-        - "hostname.size() > 0 && hostname.size() <= 253"        # Standard DNS name length limits
-        - "hostname.matches('^[a-zA-Z0-9._-]+$')"                # Valid hostname characters
-        - "!hostname.contains(';')"                              # Prevent command injection
-        - "int(port) >= 1 && int(port) <= 65535"                 # Valid port range
+        # Target validation - allow hostnames, IPs, CIDR, and IP ranges
+        - "target.size() > 0 && target.size() <= 253"
+        - "target.matches('^[a-zA-Z0-9./_-]+$')"                 # Valid chars for hostname/IP/CIDR/range
+        - "!target.contains(';')"                                # Prevent command injection
+        - "!target.contains('&')"
+        - "!target.contains('|')"
+        - "!target.contains('`')"
+        - "!target.contains('$')"
+        # Port validation - allow single port, ranges, or comma-separated
+        - "ports.size() > 0 && ports.size() <= 100"              # Reasonable port spec length
+        - "ports.matches('^[0-9,-]+$')"                          # Only digits, commas, and hyphens
+        - "!ports.contains('--')"                                # Prevent malformed ranges
+        - "!ports.startsWith('-') && !ports.endsWith('-')"       # No leading/trailing hyphens
+        # Scan type validation
+        - "scan_type == '' || scan_type == 'quick' || scan_type == 'connect'"
       run:
-        timeout: "30s"
+        timeout: "120s"
+        runner: sandbox-exec
         command: |
-          # Using timeout for all platforms to prevent hanging
-          if [ "$(uname)" = "Darwin" ]; then
-            # macOS
-            nc -zv -G 5 "{{ .hostname }}" {{ .port }} 2>&1
-          elif [ "$(uname)" = "Linux" ]; then
-            # Linux
-            timeout 5 nc -zv "{{ .hostname }}" {{ .port }} 2>&1 || echo "Connection failed or timed out"
+          TARGET="{{ .target }}"
+          PORTS="{{ .ports }}"
+          SCAN_TYPE="{{ .scan_type }}"
+          
+          # Default to connect scan for compatibility
+          if [ -z "$SCAN_TYPE" ]; then
+            SCAN_TYPE="connect"
+          fi
+          
+          echo "Scanning ports $PORTS on $TARGET (scan type: $SCAN_TYPE)..."
+          echo ""
+          
+          # Check if nmap is available
+          if command -v nmap >/dev/null 2>&1; then
+            echo "Using nmap for port scanning..."
+            if [ "$SCAN_TYPE" = "quick" ]; then
+              # SYN scan (requires root on most systems, will fall back to connect if not root)
+              sudo -n nmap -sS -p "$PORTS" --open -T4 --max-retries 2 "$TARGET" 2>/dev/null || \
+                nmap -sT -p "$PORTS" --open -T4 --max-retries 2 "$TARGET"
+            else
+              # TCP connect scan (no root required)
+              nmap -sT -p "$PORTS" --open -T4 --max-retries 2 "$TARGET"
+            fi
           else
-            # Windows fallback using PowerShell through WSL or similar
-            echo "Checking port {{ .port }} on {{ .hostname }}..."
-            echo "(Test-NetConnection -ComputerName {{ .hostname }} -Port {{ .port }}).TcpTestSucceeded" | powershell.exe -Command -
+            echo "nmap not found, using netcat for basic port scanning..."
+            echo "Note: This method only supports single hosts, not IP ranges"
+            echo ""
+            
+            # Parse the port specification
+            if echo "$PORTS" | grep -q '-'; then
+              # Port range
+              START_PORT=$(echo "$PORTS" | cut -d'-' -f1)
+              END_PORT=$(echo "$PORTS" | cut -d'-' -f2)
+              
+              echo "Scanning ports $START_PORT to $END_PORT on $TARGET..."
+              for port in $(seq "$START_PORT" "$END_PORT"); do
+                if [ "$(uname)" = "Darwin" ]; then
+                  # macOS netcat
+                  if nc -zv -G 2 "$TARGET" "$port" 2>&1 | grep -q "succeeded\|open"; then
+                    echo "Port $port: OPEN"
+                  fi
+                else
+                  # Linux netcat
+                  if timeout 2 nc -zv "$TARGET" "$port" 2>&1 | grep -q "succeeded\|open"; then
+                    echo "Port $port: OPEN"
+                  fi
+                fi
+              done
+            elif echo "$PORTS" | grep -q ','; then
+              # Comma-separated ports
+              echo "Scanning specified ports on $TARGET..."
+              IFS=',' read -ra PORT_ARRAY <<< "$PORTS"
+              for port in "${PORT_ARRAY[@]}"; do
+                if [ "$(uname)" = "Darwin" ]; then
+                  if nc -zv -G 2 "$TARGET" "$port" 2>&1 | grep -q "succeeded\|open"; then
+                    echo "Port $port: OPEN"
+                  fi
+                else
+                  if timeout 2 nc -zv "$TARGET" "$port" 2>&1 | grep -q "succeeded\|open"; then
+                    echo "Port $port: OPEN"
+                  fi
+                fi
+              done
+            else
+              # Single port
+              echo "Scanning port $PORTS on $TARGET..."
+              if [ "$(uname)" = "Darwin" ]; then
+                nc -zv -G 2 "$TARGET" "$PORTS" 2>&1
+              else
+                timeout 2 nc -zv "$TARGET" "$PORTS" 2>&1 || echo "Port $PORTS: closed or filtered"
+              fi
+            fi
+            
+            echo ""
+            echo "Scan complete. Note: Install 'nmap' for more comprehensive scanning capabilities."
           fi
       output:
-        prefix: "Port {{ .port }} check for {{ .hostname }}:"
+        prefix: "Port scan results for {{ .target }}:"
 
     - name: "netstat_connections"
       description: "Show active network connections"

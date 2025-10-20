@@ -25,7 +25,9 @@ mcpshell agent [flags]
 ### Required Flags
 
 - `--tools`: Path to the tools configuration file (required)
-- `--model`, `-m`: LLM model to use (e.g., "gpt-4o", "llama3", etc.) - can be omitted if a default model is configured in your [agent configuration](usage-agent-conf.md)
+- `--model`, `-m`: LLM model to use (e.g., "gpt-4o", "llama3", etc.) - can be omitted if:
+  - A default model is configured in your [agent configuration](usage-agent-conf.md), or
+  - The `MCPSHELL_AGENT_MODEL` environment variable is set
 
 ### Optional Flags
 
@@ -50,6 +52,77 @@ MCPShell has agent-specific configuration that includes model definitions with p
 - Example configurations
 
 **See the [Agent Configuration Guide](usage-agent-conf.md)**
+
+## Agent Subcommands
+
+### `agent info` - Display Agent Configuration
+
+The `agent info` subcommand displays detailed information about the current agent configuration:
+
+```bash
+mcpshell agent info [--tools <tools-file>]
+```
+
+**Note**: The `--tools` flag is **optional** for this command. It's only needed if you want to verify the full agent configuration including tools setup. Without it, the command will display your agent's model configuration, API settings, and prompts.
+
+**Flags:**
+
+- `--json`: Output in JSON format (ideal for parsing by other tools)
+- `--include-prompts`: Include the full system prompts in the output
+- `--check`: Test LLM connectivity (exits with error if LLM is not responding)
+- `--tools`: (Optional) Path to tools configuration file
+
+**Examples:**
+
+Display basic agent configuration (no tools needed):
+
+```bash
+mcpshell agent info
+```
+
+Check LLM connectivity:
+
+```bash
+mcpshell agent --model llama3 info --check
+```
+
+Output in JSON format for parsing:
+
+```bash
+mcpshell agent info --json
+```
+
+Show configuration with full prompts:
+
+```bash
+mcpshell agent --system-prompt "Custom prompt" info --include-prompts
+```
+
+Include tools configuration verification:
+
+```bash
+mcpshell agent info --tools disk-diagnostics-ro.yaml
+```
+
+Override model and show configuration:
+
+```bash
+mcpshell agent --model llama3 info --json
+```
+
+The info command shows:
+
+- Agent configuration file path (typically `~/.mcpshell/agent.yaml`)
+- Orchestrator model (the main planning agent)
+- Tool-runner model (the agent that executes tools)
+- API configuration (with masked keys)
+- System prompts (with `--include-prompts`)
+- LLM connectivity status (with `--check`)
+- Configured tools file (if `--tools` is provided)
+
+### `agent config` - Manage Agent Configuration
+
+See the [Agent Configuration Guide](usage-agent-conf.md) for details on the `agent config` subcommands.
 
 ## Running the Agent
 
@@ -94,6 +167,18 @@ agent:
 - Load tools from `disk-diagnostics-ro.yaml`.
 - Connect to the configured LLM API.
 - Process the LLM's responses and execute tool calls as requested.
+
+You can also use STDIN as part of the prompt by using a `-` for replacing it,
+like this:
+
+```bash
+cat failure.log | mcpshell agent \
+  --tools kubectl-ro.yaml \
+  "I'm seeing this error in the Kubernetes logs" - "Please help me to debug this problem."
+```
+
+When STDIN is used (via `-`), the agent automatically runs in `--once` mode since
+STDIN is no longer available for interactive input.
 
 ## Interacting with the Agent
 

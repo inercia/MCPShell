@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"os/signal"
 	"strings"
@@ -22,6 +23,46 @@ import (
 // Cache the agent configuration to avoid duplicate resolution
 var cachedAgentConfig agent.AgentConfig
 
+// processArgsWithStdin processes positional arguments and replaces "-" with STDIN content
+// Returns the processed prompt and a boolean indicating if STDIN was used
+func processArgsWithStdin(args []string) (string, bool, error) {
+	if len(args) == 0 {
+		return "", false, nil
+	}
+
+	// Check if any argument is "-" (STDIN placeholder)
+	hasStdin := false
+	for _, arg := range args {
+		if arg == "-" {
+			hasStdin = true
+			break
+		}
+	}
+
+	// If no STDIN placeholder, just join the arguments
+	if !hasStdin {
+		return strings.Join(args, " "), false, nil
+	}
+
+	// Read STDIN content
+	stdinContent, err := io.ReadAll(os.Stdin)
+	if err != nil {
+		return "", false, fmt.Errorf("failed to read STDIN: %w", err)
+	}
+
+	// Replace "-" with STDIN content in the arguments
+	processedArgs := make([]string, 0, len(args))
+	for _, arg := range args {
+		if arg == "-" {
+			processedArgs = append(processedArgs, string(stdinContent))
+		} else {
+			processedArgs = append(processedArgs, arg)
+		}
+	}
+
+	return strings.Join(processedArgs, " "), true, nil
+}
+
 // buildAgentConfig creates an AgentConfig by merging command-line flags with configuration file
 func buildAgentConfig() (agent.AgentConfig, error) {
 	// Load configuration from file
@@ -37,6 +78,14 @@ func buildAgentConfig() (agent.AgentConfig, error) {
 	}
 
 	logger := common.GetLogger()
+
+	// If --model flag not provided, check for environment variable
+	if agentModel == "" {
+		if envModel := os.Getenv("MCPSHELL_AGENT_MODEL"); envModel != "" {
+			agentModel = envModel
+			logger.Debug("Using model from MCPSHELL_AGENT_MODEL environment variable: %s", agentModel)
+		}
+	}
 
 	// Override with command-line flags if provided
 	if agentModel != "" {
@@ -136,13 +185,29 @@ You can provide initial user prompt as positional arguments:
 
 $ mcpshell agent I am having trouble with my computer. It is slow and I think it is due to the CPU usage.
 
+You can also use STDIN as part of the prompt by using '-' to represent it:
+
+$ cat failure.log | mcpshell agent --tools kubectl-ro.yaml \
+     "I'm seeing this error in the Kubernetes logs" - "Please help me to debug this problem."
+
+When STDIN is used, the agent automatically runs in --once mode since STDIN is no longer available for interactive input.
+
 The agent will try to debug the issue with the given tools.
 `,
 	Args: cobra.ArbitraryArgs,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
-		// If --user-prompt is not provided but positional args exist, join them as the user prompt
+		// If --user-prompt is not provided but positional args exist, process them (including STDIN if "-" is present)
 		if agentUserPrompt == "" && len(args) > 0 {
-			agentUserPrompt = strings.Join(args, " ")
+			processedPrompt, usedStdin, err := processArgsWithStdin(args)
+			if err != nil {
+				return fmt.Errorf("failed to process arguments: %w", err)
+			}
+			agentUserPrompt = processedPrompt
+
+			// If STDIN was used, automatically enable --once mode since STDIN is no longer available for interactive input
+			if usedStdin && !agentOnce {
+				agentOnce = true
+			}
 		}
 
 		// Initialize logger
@@ -166,10 +231,8 @@ The agent will try to debug the issue with the given tools.
 		return nil
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
-		// If --user-prompt is not provided but positional args exist, join them as the user prompt
-		if agentUserPrompt == "" && len(args) > 0 {
-			agentUserPrompt = strings.Join(args, " ")
-		}
+		// Use the agentUserPrompt that was already set in PreRunE
+		// No need to process args again since PreRunE already handled STDIN if needed
 
 		// Initialize logger
 		logger, err := initLogger()
@@ -286,13 +349,13 @@ func init() {
 	// Add agent command to root
 	rootCmd.AddCommand(agentCommand)
 
-	// Add agent-specific flags
-	agentCommand.Flags().StringVarP(&agentModel, "model", "m", "", "LLM model to use (required)")
-	agentCommand.Flags().StringVarP(&agentSystemPrompt, "system-prompt", "s", "", "System prompt for the LLM (optional, uses model-specific defaults if not provided)")
-	agentCommand.Flags().StringVarP(&agentUserPrompt, "user-prompt", "u", "", "Initial user prompt for the LLM")
-	agentCommand.Flags().StringVarP(&agentOpenAIApiKey, "openai-api-key", "k", "", "OpenAI API key (or set OPENAI_API_KEY environment variable)")
-	agentCommand.Flags().StringVarP(&agentOpenAIApiURL, "openai-api-url", "b", "", "Base URL for the OpenAI API (optional)")
-	agentCommand.Flags().BoolVarP(&agentOnce, "once", "o", false, "Exit after receiving a final response from the LLM (one-shot mode)")
+	// Add agent-specific flags as persistent flags so subcommands can use them
+	agentCommand.PersistentFlags().StringVarP(&agentModel, "model", "m", "", "LLM model to use (can also set MCPSHELL_AGENT_MODEL env var)")
+	agentCommand.PersistentFlags().StringVarP(&agentSystemPrompt, "system-prompt", "s", "", "System prompt for the LLM (optional, uses model-specific defaults if not provided)")
+	agentCommand.PersistentFlags().StringVarP(&agentUserPrompt, "user-prompt", "u", "", "Initial user prompt for the LLM")
+	agentCommand.PersistentFlags().StringVarP(&agentOpenAIApiKey, "openai-api-key", "k", "", "OpenAI API key (or set OPENAI_API_KEY environment variable)")
+	agentCommand.PersistentFlags().StringVarP(&agentOpenAIApiURL, "openai-api-url", "b", "", "Base URL for the OpenAI API (optional)")
+	agentCommand.PersistentFlags().BoolVarP(&agentOnce, "once", "o", false, "Exit after receiving a final response from the LLM (one-shot mode)")
 
 	// Add config subcommand
 	agentCommand.AddCommand(agentConfigCommand)

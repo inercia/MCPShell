@@ -31,6 +31,30 @@ For the Kubernetes example, you can aks questions about your current cluster, po
 Some other examples are just for demonstrating the configuration file format and paramters
 (like all the `config*yaml`).
 
+## Using STDIN with the Agent
+
+The agent command supports reading from STDIN as part of the prompt. This is useful when you want to
+pipe log files, error messages, or other text content for the LLM to analyze.
+
+Use `-` as a placeholder in the arguments to represent STDIN content:
+
+```bash
+# Analyze a log file
+cat error.log | mcpshell agent --tools log-analysis-ro.yaml \
+  "I'm seeing errors in this log file:" - "Please help me understand what went wrong."
+
+# Debug Kubernetes issues
+kubectl logs my-pod | mcpshell agent --tools kubectl-ro.yaml \
+  "Here are the logs from a failing pod:" - "What's causing the failure?"
+
+# Examine system performance
+ps aux | mcpshell agent --tools system-performance-ro.yaml \
+  "Current process list:" - "Which processes are using the most resources?"
+```
+
+**Note:** When STDIN is used, the agent automatically runs in `--once` mode (single interaction)
+since STDIN is no longer available for interactive input.
+
 ## Creating your own scripts with Cursor
 
 Most of the examples in this directory have been generated automatically
