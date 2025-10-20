@@ -254,7 +254,7 @@ func checkLLMConnectivity(modelConfig agent.ModelConfig, logger *common.Logger) 
 	}
 
 	// Make a simple test request
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	startTime := time.Now()

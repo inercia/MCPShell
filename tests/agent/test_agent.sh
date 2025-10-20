@@ -45,7 +45,7 @@ separator
 
 # Use the agent info --check command to test LLM connectivity
 # This is more robust than curl as it tests the actual agent configuration
-CHECK_OUTPUT=$("$CLI_BIN" --tools "$CONFIG_FILE" agent \
+CHECK_OUTPUT=$("$CLI_BIN" agent --tools "$CONFIG_FILE" \
     $MODEL_FLAG \
     $API_KEY_FLAG \
     $API_URL_FLAG \
