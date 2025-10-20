@@ -53,7 +53,7 @@ MCPShell has agent-specific configuration that includes model definitions with p
 
 ## Running the Agent
 
-With the tools degined in `disk-diagnostics-ro.yaml`, you can run:
+With the tools defined in `disk-diagnostics-ro.yaml`, you can run:
 
 ```bash
 mcpshell agent \
@@ -90,7 +90,7 @@ agent:
       name: "llama3"
 ```
 
-- Load system prompts from the agent configuration (if any, or use teh default ones).
+- Load system prompts from the agent configuration (if any, or use the default ones).
 - Load tools from `disk-diagnostics-ro.yaml`.
 - Connect to the configured LLM API.
 - Process the LLM's responses and execute tool calls as requested.
