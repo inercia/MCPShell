@@ -85,7 +85,7 @@ func (h *CommandHandler) executeToolCommand(ctx context.Context, params map[stri
 	}
 
 	// Wrap command with timeout if configured and timeout command is available
-	if h.timeout != "" && common.CheckExecutableExists("timeout") {
+	if h.timeout != "" {
 		timeoutDuration, err := time.ParseDuration(h.timeout)
 		if err != nil {
 			h.logger.Error("Invalid timeout format '%s': %v", h.timeout, err)
@@ -101,15 +101,17 @@ func (h *CommandHandler) executeToolCommand(ctx context.Context, params map[stri
 		// Escape single quotes in the command for shell
 		escapedCmd := strings.ReplaceAll(cmd, "'", "'\"'\"'")
 
-		// Wrap the command with timeout
-		// Using timeout command which will kill the entire process group
-		// This works reliably on Unix/Linux/macOS systems
-		cmd = fmt.Sprintf("timeout --kill-after=5s %ds sh -c '%s'", timeoutSeconds, escapedCmd)
-		h.logger.Debug("Wrapped command with Unix timeout: %ds", timeoutSeconds)
-	} else if h.timeout != "" {
-		// timeout command not available (probably Windows)
-		// Fall back to context-based timeout (less reliable for child processes)
-		h.logger.Debug("Unix timeout command not available, using context-based timeout: %s", h.timeout)
+		// On Unix systems, try to use the 'timeout' command if available, otherwise use context-based timeout
+		// On Windows, always use context-based timeout as 'timeout' command doesn't limit execution time
+		if shouldUseUnixTimeoutCommand() {
+			// On Unix/Linux/macOS systems, use timeout command with Unix syntax
+			cmd = fmt.Sprintf("timeout --kill-after=5s %ds sh -c '%s'", timeoutSeconds, escapedCmd)
+			h.logger.Debug("Wrapped command with Unix timeout: %ds", timeoutSeconds)
+		} else {
+			// timeout command not available on this platform or this is Windows
+			// Fall back to context-based timeout (less reliable for child processes)
+			h.logger.Debug("Timeout command not available, using context-based timeout: %s", h.timeout)
+		}
 	}
 
 	// h.logger.Debug("Processed command: %s", cmd)
