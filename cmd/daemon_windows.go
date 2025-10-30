@@ -27,16 +27,10 @@ func daemonize() error {
 	// Build command arguments, excluding the daemon flag
 	args := os.Args[1:]
 	var newArgs []string
-	for i, arg := range args {
-		if arg == "--daemon" {
-			// Skip the daemon flag
-			continue
+	for _, arg := range args {
+		if arg != "--daemon" {
+			newArgs = append(newArgs, arg)
 		}
-		if i > 0 && args[i-1] == "--daemon" {
-			// Skip the value if it was a separate argument
-			continue
-		}
-		newArgs = append(newArgs, arg)
 	}
 
 	// Create the command
