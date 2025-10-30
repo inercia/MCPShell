@@ -112,39 +112,13 @@ func (r *RunnerExec) Run(ctx context.Context, shell string,
 			}
 		}()
 
-		// Format the command with proper shell syntax and file extension based on shell and OS
+		// Format the command with proper shell syntax and file extension
 		var scriptContent strings.Builder
-		var scriptFileName string
 		
-		shellLower := strings.ToLower(configShell)
-		if runtime.GOOS == "windows" {
-			// On Windows, format script content based on shell type
-			if isCmdShell(shellLower) {
-				// For cmd shell, create a batch script that only outputs command result
-				scriptContent.WriteString("@echo off\r\n")
-				scriptContent.WriteString("chcp 65001 >nul 2>&1\r\n")  // Set UTF-8 encoding to handle international characters
-				scriptContent.WriteString("setlocal\r\n")  // Start local environment
-				scriptContent.WriteString(command)
-				scriptContent.WriteString("\r\nendlocal\r\n")  // End local environment
-				scriptContent.WriteString("exit /b %errorlevel%\r\n")
-				scriptFileName = "script.bat"
-			} else if isPowerShell(shellLower) {
-				// For PowerShell, create a PowerShell script
-				scriptContent.WriteString(command)
-				scriptContent.WriteString("\nexit $LASTEXITCODE")
-				scriptFileName = "script.ps1"
-			} else {
-				// Fallback to Unix-style for other shells
-				scriptContent.WriteString("#!/bin/sh\n")
-				scriptContent.WriteString(command)
-				scriptFileName = "script.sh"
-			}
-		} else {
-			// On Unix-like systems, use Unix-style script
-			scriptContent.WriteString("#!/bin/sh\n")
-			scriptContent.WriteString(command)
-			scriptFileName = "script.sh"
-		}
+		// On Unix-like systems, use Unix-style script
+		scriptContent.WriteString("#!/bin/sh\n")
+		scriptContent.WriteString(command)
+		scriptFileName := "script.sh"
 
 		tmpFile := filepath.Join(tmpDir, scriptFileName)
 		err = os.WriteFile(tmpFile, []byte(scriptContent.String()), 0o700)
