@@ -38,10 +38,9 @@ func daemonize() error {
 	cmd.Dir = workDir
 	cmd.Env = os.Environ()
 
-	// Set up process attributes for daemon behavior
-	// On Windows, we don't have Setsid.
-	// An empty SysProcAttr is sufficient to make it compile.
-	cmd.SysProcAttr = &syscall.SysProcAttr{}
+	// On Windows, use DETACHED_PROCESS flag to run in the background
+	// without being attached to the parent's console.
+	cmd.SysProcAttr = &syscall.SysProcAttr{CreationFlags: 0x00000008 /* DETACHED_PROCESS */}
 
 	// Start the process
 	if err := cmd.Start(); err != nil {
