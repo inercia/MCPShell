@@ -40,7 +40,7 @@ func daemonize() error {
 
 	// On Windows, use DETACHED_PROCESS flag to run in the background
 	// without being attached to the parent's console.
-	cmd.SysProcAttr = &syscall.SysProcAttr{CreationFlags: 0x00000008 /* DETACHED_PROCESS */}
+cmd.SysProcAttr = &syscall.SysProcAttr{CreationFlags: syscall.DETACHED_PROCESS}
 
 	// Start the process
 	if err := cmd.Start(); err != nil {
