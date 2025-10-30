@@ -110,8 +110,6 @@ and ignore SIGHUP signals.
 	},
 }
 
-
-
 // setupSIGHUPHandler sets up signal handling to ignore SIGHUP in daemon mode
 func setupSIGHUPHandler(logger *common.Logger) {
 	sigChan := make(chan os.Signal, 1)

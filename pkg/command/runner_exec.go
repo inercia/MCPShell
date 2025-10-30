@@ -56,8 +56,6 @@ func NewRunnerExec(options RunnerOptions, logger *common.Logger) (*RunnerExec, e
 	}, nil
 }
 
-
-
 // Run executes a command with the given shell and returns the output.
 // It implements the Runner interface.
 //
@@ -83,7 +81,7 @@ func (r *RunnerExec) Run(ctx context.Context, shell string,
 	// This helps avoid the temporary script file issue on Windows where cmd shows version info
 	configShell := getShell(shell)
 	shellLower := strings.ToLower(configShell)
-	
+
 	// For Windows shells, use direct execution with appropriate parameter for better output capture
 	if runtime.GOOS == "windows" && isWindowsShell(shellLower) {
 		// Use direct execution for Windows shells to avoid temp file issues
@@ -117,7 +115,7 @@ func (r *RunnerExec) Run(ctx context.Context, shell string,
 
 		// Format the command with proper shell syntax and file extension
 		var scriptContent strings.Builder
-		
+
 		// On Unix-like systems, use Unix-style script
 		scriptContent.WriteString("#!/bin/sh\n")
 		scriptContent.WriteString(command)
@@ -180,7 +178,7 @@ func (r *RunnerExec) Run(ctx context.Context, shell string,
 	// Get the combined output in case stdout doesn't capture everything
 	stdoutStr := stdout.String()
 	stderrStr := stderr.String()
-	
+
 	// For Windows, we might need to handle output differently
 	// Some Windows commands output to stderr instead of stdout
 	output := stdoutStr
@@ -193,7 +191,7 @@ func (r *RunnerExec) Run(ctx context.Context, shell string,
 		r.logger.Debug("Detected Windows command prompt output, checking for real command output")
 		// We'll still return what we captured, but this suggests the command didn't execute as expected
 	}
-	
+
 	// Trim the output but preserve meaningful content
 	output = strings.TrimSpace(output)
 
@@ -255,8 +253,6 @@ func getShell(configShell string) string {
 
 	return "/bin/sh" // Default for Unix-like systems
 }
-
-
 
 // CheckImplicitRequirements checks if the runner meets its implicit requirements
 // Exec runner has no special requirements
