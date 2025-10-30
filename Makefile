@@ -98,7 +98,7 @@ validate-examples: build
 # Automated release process
 release:
 	@echo ">>> Checking repository status..."
-	@if [ -n "$$(git status --porcelain)" ]; then \
+	@if [ -n "$$(git status --porcelain --untracked-files=no)" ]; then \
 		echo "Error: Repository has uncommitted changes. Please commit or stash them first."; \
 		exit 1; \
 	fi
