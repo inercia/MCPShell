@@ -26,5 +26,5 @@ func getShellCommandArgs(shell string, command string) (string, []string) {
 
 // shouldUseUnixTimeoutCommand returns whether to use the Unix-style timeout command
 func shouldUseUnixTimeoutCommand() bool {
-	return common.CheckExecutableExists("timeout")
+    return common.CheckExecutableExists("timeout")
 }
