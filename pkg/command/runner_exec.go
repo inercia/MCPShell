@@ -82,10 +82,7 @@ func (r *RunnerExec) Run(ctx context.Context, shell string,
 	shellLower := strings.ToLower(configShell)
 	
 	// For Windows shells, use direct execution with appropriate parameter for better output capture
-	if runtime.GOOS == "windows" && 
-	   (strings.Contains(shellLower, "cmd") || strings.HasSuffix(shellLower, "cmd.exe") ||
-	    strings.Contains(shellLower, "powershell") || strings.HasSuffix(shellLower, "powershell.exe") || 
-	    strings.HasSuffix(shellLower, "pwsh.exe")) {
+	if runtime.GOOS == "windows" && isWindowsShell(shellLower) {
 		// Use direct execution for Windows shells to avoid temp file issues
 		shellPath, args := getShellCommandArgs(configShell, command)
 		execCmd = exec.CommandContext(ctx, shellPath, args...)
@@ -122,7 +119,7 @@ func (r *RunnerExec) Run(ctx context.Context, shell string,
 		shellLower := strings.ToLower(configShell)
 		if runtime.GOOS == "windows" {
 			// On Windows, format script content based on shell type
-			if strings.Contains(shellLower, "cmd") || strings.HasSuffix(shellLower, "cmd.exe") {
+			if isCmdShell(shellLower) {
 				// For cmd shell, create a batch script that only outputs command result
 				scriptContent.WriteString("@echo off\r\n")
 				scriptContent.WriteString("chcp 65001 >nul 2>&1\r\n")  // Set UTF-8 encoding to handle international characters
@@ -131,7 +128,7 @@ func (r *RunnerExec) Run(ctx context.Context, shell string,
 				scriptContent.WriteString("\r\nendlocal\r\n")  // End local environment
 				scriptContent.WriteString("exit /b %errorlevel%\r\n")
 				scriptFileName = "script.bat"
-			} else if strings.Contains(shellLower, "powershell") || strings.HasSuffix(shellLower, "powershell.exe") || strings.HasSuffix(shellLower, "pwsh.exe") {
+			} else if isPowerShell(shellLower) {
 				// For PowerShell, create a PowerShell script
 				scriptContent.WriteString(command)
 				scriptContent.WriteString("\nexit $LASTEXITCODE")
@@ -231,6 +228,24 @@ func (r *RunnerExec) Run(ctx context.Context, shell string,
 
 	// Return the output
 	return output, nil
+}
+
+// isCmdShell checks if the given shell is a Windows cmd shell
+func isCmdShell(shell string) bool {
+	shellLower := strings.ToLower(shell)
+	return strings.Contains(shellLower, "cmd") || strings.HasSuffix(shellLower, "cmd.exe")
+}
+
+// isPowerShell checks if the given shell is a PowerShell
+func isPowerShell(shell string) bool {
+	shellLower := strings.ToLower(shell)
+	return strings.Contains(shellLower, "powershell") || strings.HasSuffix(shellLower, "powershell.exe") ||
+		strings.HasSuffix(shellLower, "pwsh.exe")
+}
+
+// isWindowsShell checks if the given shell is a Windows-specific shell (cmd or powershell)
+func isWindowsShell(shell string) bool {
+	return isCmdShell(shell) || isPowerShell(shell)
 }
 
 // getShell returns the shell to use for command execution,
