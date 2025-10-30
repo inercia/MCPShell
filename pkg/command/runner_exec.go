@@ -58,8 +58,11 @@ func NewRunnerExec(options RunnerOptions, logger *common.Logger) (*RunnerExec, e
 
 
 
-// Run executes a command with the given shell and returns the output
-// It implements the Runner interface
+// Run executes a command with the given shell and returns the output.
+// It implements the Runner interface.
+//
+// Note: For Windows native shells (cmd, powershell), the 'tmpfile' parameter is ignored
+// and commands are executed directly to avoid issues with output capturing.
 func (r *RunnerExec) Run(ctx context.Context, shell string,
 	command string,
 	env []string, params map[string]interface{},
