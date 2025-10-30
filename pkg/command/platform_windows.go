@@ -35,5 +35,5 @@ func getShellCommandArgs(shell string, command string) (string, []string) {
 func shouldUseUnixTimeoutCommand() bool {
 	// On Windows, we don't use Unix-style timeout command even if a 'timeout' command exists
 	// because Windows 'timeout' is for pausing, not for limiting execution time
-	return false
+    return false
 }
