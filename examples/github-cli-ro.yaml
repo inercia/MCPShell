@@ -62,6 +62,68 @@ mcp:
               - '{{ env "HOME" }}/.config/gh'
         - name: exec
           requirements: {}
+    - name: "gh_raw_file"
+      description: "Fetch and display a raw file from a GitHub repository"
+      requirements:
+        executables:
+          - curl
+      params:
+        repo:
+          type: string
+          description: "Repository name in the format owner/repo"
+          required: true
+        filepath:
+          type: string
+          description: "Path to the file in the repository (e.g., README.md, src/main.go)"
+          required: true
+        ref:
+          type: string
+          description: "Git reference (branch, tag, or commit SHA). Defaults to 'main'"
+          default: "main"
+      constraints:
+        - "repo.size() > 0 && repo.size() <= 100" # Reasonable repo name length
+        - "repo.matches('^[a-zA-Z0-9_.-]+/[a-zA-Z0-9_.-]+$')" # Valid repo format (owner/repo)
+        - "!repo.contains(';')" # Prevent command injection
+        - "filepath.size() > 0 && filepath.size() <= 500" # Reasonable file path length
+        - "!filepath.contains('../')" # Prevent path traversal
+        - "!filepath.contains(';')" # Prevent command injection
+        - "!filepath.contains('|')" # Prevent command injection
+        - "!filepath.contains('`')" # Prevent command injection
+        - "!filepath.contains('$(')" # Prevent command substitution
+        - "filepath.matches('^[a-zA-Z0-9_./-]+$')" # Only safe path characters
+        - "ref.size() > 0 && ref.size() <= 100" # Reasonable ref length
+        - "!ref.contains(';')" # Prevent command injection
+        - "!ref.contains('|')" # Prevent command injection
+        - "!ref.contains('`')" # Prevent command injection
+        - "!ref.contains('$(')" # Prevent command substitution
+        - "ref.matches('^[a-zA-Z0-9_./-]+$')" # Valid git ref characters
+      run:
+        timeout: "60s"
+        env:
+          - GITHUB_TOKEN
+        command: |
+          curl -fsSL {{ if env "GITHUB_TOKEN" }}-H "Authorization: token {{ env "GITHUB_TOKEN" }}"{{ end }} "https://github.com/{{ .repo }}/raw/{{ .ref }}/{{ .filepath }}"
+      output:
+        prefix: "File {{ .filepath }} from {{ .repo }} (ref: {{ .ref }}):"
+      runners:
+        - name: sandbox-exec
+          options:
+            allow_networking: true
+            allow_user_folders: false
+            allow_read_folders:
+              - /usr/bin
+              - /usr/local/bin
+              - /bin
+        - name: firejail
+          options:
+            allow_networking: true
+            allow_user_folders: false
+            allow_read_folders:
+              - /usr/bin
+              - /usr/local/bin
+              - /bin
+        - name: exec
+          requirements: {}
     - name: "gh_issue_list"
       description: "List issues in a GitHub repository"
       params:
