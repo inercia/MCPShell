@@ -23,12 +23,17 @@ jobs:
         run: go mod download
 
       - name: Run tests
-        run: go test -v ./cmd/... ./pkg/...
+        shell: bash
+        run: |
+          go test -v ./cmd/... ./pkg/...
 
       - name: Run tests with race detection
-        run: go test -race -v ./cmd/... ./pkg/...
+        shell: bash
+        run: |
+          go test -race -v ./cmd/... ./pkg/...
 
       - name: Check code formatting
+        shell: bash
         run: |
           if [ "$(gofmt -l . | wc -l)" -gt 0 ]; then
             echo "The following files are not formatted correctly:"
@@ -37,9 +42,12 @@ jobs:
           fi
 
       - name: Build application
-        run: go build -o mcpshell .
+        shell: bash
+        run: |
+          go build -o mcpshell .
 
       - name: Validate example configurations
+        shell: bash
         run: |
           echo "Validating example YAML configurations..."
           find examples -name "*.yaml" -type f | while read file; do
@@ -47,9 +55,11 @@ jobs:
             ./mcpshell validate --tools "$file" || exit 1
           done
           echo "All example configurations validated successfully"
-          
+
       - name: Run end-to-end tests
-        run: make test-e2e
+        shell: bash
+        run: |
+          make test-e2e
 
       - name: Run linters
         uses: golangci/golangci-lint-action@v8
