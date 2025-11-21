@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"os"
 	"syscall"
+
+	"golang.org/x/sys/windows"
 )
 
 // daemonize forks the process to run in the background
@@ -17,7 +19,7 @@ func daemonize() error {
 
 	// On Windows, use DETACHED_PROCESS flag to run in the background
 	// without being attached to the parent's console.
-	cmd.SysProcAttr = &syscall.SysProcAttr{CreationFlags: syscall.DETACHED_PROCESS}
+	cmd.SysProcAttr = &syscall.SysProcAttr{CreationFlags: windows.DETACHED_PROCESS}
 
 	// Start the process
 	if err := cmd.Start(); err != nil {
