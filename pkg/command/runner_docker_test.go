@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"os/exec"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -28,6 +29,11 @@ func checkDockerRunning() bool {
 }
 
 func TestDockerRunnerInitialization(t *testing.T) {
+	// Skip on Windows - Alpine Linux doesn't support Windows containers
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping Docker test on Windows - Alpine Linux image not compatible with Windows containers")
+	}
+
 	if !checkDockerRunning() {
 		t.Skip("Docker not installed or not running, skipping test")
 	}
@@ -79,6 +85,11 @@ func TestDockerRunnerInitialization(t *testing.T) {
 }
 
 func TestDockerRunnerBasic(t *testing.T) {
+	// Skip on Windows - Alpine Linux doesn't support Windows containers
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping Docker test on Windows - Alpine Linux image not compatible with Windows containers")
+	}
+
 	// Skip if docker is not available or not running
 	if !checkDockerRunning() {
 		t.Skip("Docker not installed or not running, skipping test")
@@ -109,6 +120,11 @@ func TestDockerRunnerBasic(t *testing.T) {
 }
 
 func TestDockerRunnerNetworking(t *testing.T) {
+	// Skip on Windows - Alpine Linux doesn't support Windows containers
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping Docker test on Windows - Alpine Linux image not compatible with Windows containers")
+	}
+
 	// Skip if docker is not available or not running
 	if !checkDockerRunning() {
 		t.Skip("Docker not installed or not running, skipping test")
@@ -168,6 +184,11 @@ func TestDockerRunnerNetworking(t *testing.T) {
 }
 
 func TestDockerRunnerEnvironmentVariables(t *testing.T) {
+	// Skip on Windows - Alpine Linux doesn't support Windows containers
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping Docker test on Windows - Alpine Linux image not compatible with Windows containers")
+	}
+
 	// Skip if docker is not available or not running
 	if !checkDockerRunning() {
 		t.Skip("Docker not installed or not running, skipping test")
@@ -216,6 +237,11 @@ func TestDockerRunnerEnvironmentVariables(t *testing.T) {
 }
 
 func TestDockerRunnerPrepareCommand(t *testing.T) {
+	// Skip on Windows - Alpine Linux doesn't support Windows containers
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping Docker test on Windows - Alpine Linux image not compatible with Windows containers")
+	}
+
 	// Skip if docker is not available or not running
 	if !checkDockerRunning() {
 		t.Skip("Docker not installed or not running, skipping test")
@@ -246,6 +272,11 @@ func TestDockerRunnerPrepareCommand(t *testing.T) {
 }
 
 func TestDockerRunner_Optimization_SingleExecutable(t *testing.T) {
+	// Skip on Windows - Alpine Linux doesn't support Windows containers
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping Docker test on Windows - Alpine Linux image not compatible with Windows containers")
+	}
+
 	if !checkDockerRunning() {
 		t.Skip("Docker not installed or not running, skipping test")
 	}
