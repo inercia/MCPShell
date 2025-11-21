@@ -73,7 +73,7 @@ checking paramters and so on.
 Provide only read-only commands, do not allow the execution
 of code with side effects.
 Validate the example generated with
-"go run github.com/inercia/MCPShell@v0.1.7 validate --tools FILENAME"
+"go run github.com/inercia/MCPShell@v0.1.8 validate --tools FILENAME"
 where FILENAME is the configuration file you have created.
 If some errors are detected by the validation process, please try to fix them
 until the validation is successful.

@@ -76,7 +76,7 @@ space problems in your hard disk.
            "mcp-cli-examples": {
                "command": "go",
                "args": [
-                  "run", "github.com/inercia/MCPShell@v0.1.7",
+                  "run", "github.com/inercia/MCPShell@v0.1.8",
                   "mcp", "--tools", "/my/example.yaml",
                   "--logfile", "/some/path/mcpshell/example.log"
                ]
@@ -93,7 +93,7 @@ space problems in your hard disk.
            "mcp-cli-examples": {
                "command": "go",
                "args": [
-                  "run", "github.com/inercia/MCPShell@v0.1.7",
+                  "run", "github.com/inercia/MCPShell@v0.1.8",
                   "mcp", "--tools", "example",
                   "--logfile", "/some/path/mcpshell/example.log"
                ]
