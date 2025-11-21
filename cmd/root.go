@@ -36,8 +36,10 @@ var (
 	agentOpenAIApiURL string
 	agentOnce         bool
 
-	// Application version (can be overridden at build time)
-	version = "1.0.0"
+	// Application version information (set via SetVersion from main)
+	version   = "dev"
+	commit    = "none"
+	buildDate = "unknown"
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -73,6 +75,24 @@ When multiple configuration files are provided, they are merged with:
 	},
 }
 
+// SetVersion sets the version information from build-time variables
+func SetVersion(v, c, d string) {
+	if v != "" {
+		version = v
+	}
+	if c != "" {
+		commit = c
+	}
+	if d != "" {
+		buildDate = d
+	}
+}
+
+// GetVersion returns the full version string with build information
+func GetVersion() string {
+	return fmt.Sprintf("%s (commit: %s, built: %s)", version, commit, buildDate)
+}
+
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
@@ -93,8 +113,17 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&logLevel, "log-level", "", "info", "Log level: none, error, info, debug")
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Enable verbose logging (sets log level to debug)")
 
-	// Add version flag to all commands
-	rootCmd.PersistentFlags().Bool("version", false, "Print version information")
+	// Add version flag to all commands with custom handling
+	versionFlag := false
+	rootCmd.PersistentFlags().BoolVar(&versionFlag, "version", false, "Print version information")
+
+	// Add pre-run to handle version flag
+	rootCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
+		if versionFlag, _ := cmd.Flags().GetBool("version"); versionFlag {
+			fmt.Println(GetVersion())
+			os.Exit(0)
+		}
+	}
 }
 
 // initLogger initializes the logger with the specified configuration

@@ -10,6 +10,13 @@ import (
 	"github.com/inercia/MCPShell/pkg/common"
 )
 
+// Build information. These variables are set via ldflags during build.
+var (
+	version = "dev"
+	commit  = "none"
+	date    = "unknown"
+)
+
 // main is the entry point of the application. It sets up the panic recovery system
 // at the top level and executes the root command, which will process CLI flags and
 // execute the selected subcommand.
@@ -19,6 +26,9 @@ func main() {
 	defer func() {
 		common.RecoverPanic()
 	}()
+
+	// Set version information from build-time variables
+	cmdroot.SetVersion(version, commit, date)
 
 	// Execute the root command
 	cmdroot.Execute()

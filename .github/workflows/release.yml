@@ -3,89 +3,30 @@ name: Release
 on:
   push:
     tags:
-      - 'v*' # Trigger on tags starting with 'v', e.g., v0.1.0
+      - 'v*.*.*'
 
 permissions:
-  contents: write # Needed for creating releases
+  contents: write
 
 jobs:
-  build-and-release:
-    name: Build and Release
+  release:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        goos: [linux, darwin, windows]
-        goarch: [amd64, arm64]
-        exclude:
-          - goos: windows
-            goarch: arm64
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v5
         with:
           go-version: '1.25'
 
-      - name: Build binary
-        id: build
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          distribution: goreleaser
+          version: '~> v2'
+          args: release --clean
         env:
-          GOOS: ${{ matrix.goos }}
-          GOARCH: ${{ matrix.goarch }}
-        run: |
-          VERSION=${GITHUB_REF#refs/tags/}
-          BINARY_NAME=mcpshell
-          OUTPUT_NAME=${BINARY_NAME}-${VERSION}-${{ matrix.goos }}-${{ matrix.goarch }}
-          
-          if [ "${{ matrix.goos }}" = "windows" ]; then
-            OUTPUT_NAME=${OUTPUT_NAME}.exe
-          fi
-          
-          echo "Building ${OUTPUT_NAME}..."
-          go build -v -ldflags="-X 'main.Version=${VERSION}'" -o ${OUTPUT_NAME} .
-          
-          # Create checksums
-          if [ "${{ matrix.goos }}" = "windows" ]; then
-            sha256sum ${OUTPUT_NAME} > ${OUTPUT_NAME}.sha256
-          else
-            shasum -a 256 ${OUTPUT_NAME} > ${OUTPUT_NAME}.sha256
-          fi
-          
-          # Set outputs for next steps
-          echo "binary_path=${OUTPUT_NAME}" >> $GITHUB_OUTPUT
-          echo "binary_name=${OUTPUT_NAME}" >> $GITHUB_OUTPUT
-          echo "checksum_path=${OUTPUT_NAME}.sha256" >> $GITHUB_OUTPUT
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ steps.build.outputs.binary_name }}
-          path: |
-            ${{ steps.build.outputs.binary_path }}
-            ${{ steps.build.outputs.checksum_path }}
-
-  create-release:
-    name: Create Release
-    needs: build-and-release
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
-
-      - name: Download all artifacts
-        uses: actions/download-artifact@v5
-        with:
-          path: artifacts
-
-      - name: Create Release
-        id: create_release
-        uses: softprops/action-gh-release@v2
-        with:
-          name: Release ${{ github.ref_name }}
-          draft: false
-          prerelease: false
-          generate_release_notes: true
-          files: |
-            artifacts/**/* 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

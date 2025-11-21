@@ -1,0 +1,122 @@
+version: 2
+
+before:
+  hooks:
+    - go mod tidy
+    - go test ./...
+
+builds:
+  - id: mcpshell
+    binary: mcpshell
+    main: ./main.go
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+      - -X main.commit={{.Commit}}
+      - -X main.date={{.Date}}
+    ignore:
+      # Skip combinations that don't make sense or aren't commonly used
+      - goos: windows
+        goarch: arm64
+
+archives:
+  - id: default
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end }}
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      - LICENSE
+      - README.md
+      - docs/**/*
+      - examples/**/*
+
+checksum:
+  name_template: 'checksums.txt'
+  algorithm: sha256
+
+changelog:
+  use: github
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - '^chore:'
+      - typo
+  groups:
+    - title: Features
+      regexp: '^.*?feat(\([[:word:]]+\))??!?:.+$'
+      order: 0
+    - title: Bug Fixes
+      regexp: '^.*?fix(\([[:word:]]+\))??!?:.+$'
+      order: 1
+    - title: Performance Improvements
+      regexp: '^.*?perf(\([[:word:]]+\))??!?:.+$'
+      order: 2
+    - title: Others
+      order: 999
+
+release:
+  github:
+    owner: inercia
+    name: MCPShell
+  draft: false
+  prerelease: auto
+  mode: replace
+  header: |
+    ## MCPShell {{ .Tag }}
+
+    Download the appropriate binary for your platform below.
+
+    ### Installation
+
+    #### Linux/macOS
+    ```bash
+    # Download and extract
+    tar -xzf mcpshell_*.tar.gz
+    
+    # Make executable and move to PATH
+    chmod +x mcpshell
+    sudo mv mcpshell /usr/local/bin/
+    ```
+
+    #### Windows
+    ```powershell
+    # Extract the zip file and add to PATH
+    # Or move mcpshell.exe to a directory in your PATH
+    ```
+
+  footer: |
+    **Full Changelog**: https://github.com/inercia/MCPShell/compare/{{ .PreviousTag }}...{{ .Tag }}
+
+    ---
+    
+    ### Verify checksums
+    
+    Download `checksums.txt` and verify your download:
+    
+    ```bash
+    sha256sum -c checksums.txt
+    ```
+
+snapshot:
+  name_template: "{{ incpatch .Version }}-next"
+
+metadata:
+  mod_timestamp: "{{ .CommitTimestamp }}"

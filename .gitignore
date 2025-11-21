@@ -58,3 +58,5 @@ Thumbs.db
 # Log files
 *.log
 logs/
+go.work
+go.work.sum
