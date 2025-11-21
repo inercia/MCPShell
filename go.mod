@@ -10,6 +10,7 @@ require (
 	github.com/mark3labs/mcp-go v0.43.0
 	github.com/sashabaranov/go-openai v1.41.2
 	github.com/spf13/cobra v1.10.1
+	golang.org/x/sys v0.37.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
