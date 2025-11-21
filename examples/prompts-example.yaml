@@ -17,7 +17,7 @@ mcp:
     This server provides safe file creation capabilities with proper prompts.
   
   run:
-    shell: zsh
+    shell: bash
   
   tools:
     - name: "create_safe_file"

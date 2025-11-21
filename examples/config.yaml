@@ -4,7 +4,7 @@ mcp:
     utilities including greetings, weather information, calculation, file
     operations, and environment inspection in a secure, controlled environment.
   run:
-    shell: zsh
+    shell: bash
   tools:
     - name: "hello_world"
       description: "Say hello to someone"
