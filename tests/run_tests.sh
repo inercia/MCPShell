@@ -15,6 +15,9 @@ TEST_FILES=(
     "exe/test_exe_timeout.sh"
     "runners/test_runner_docker.sh"
     "runners/test_runner_sandbox_exec.sh"
+    "examples/test_github-cli-ro.sh"
+    "examples/test_config.sh"
+    "examples/test_disk-diagnostics-ro.sh"
 )
 
 echo "==================================="
