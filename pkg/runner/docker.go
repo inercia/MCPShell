@@ -1,5 +1,5 @@
-// Package command provides functions for creating and executing command handlers.
-package command
+// Package runner provides isolated command execution environments.
+package runner
 
 import (
 	"context"
@@ -13,14 +13,14 @@ import (
 	"github.com/inercia/MCPShell/pkg/common"
 )
 
-// DockerRunner executes commands inside a Docker container.
-type DockerRunner struct {
+// Docker executes commands inside a Docker container.
+type Docker struct {
 	logger *common.Logger
-	opts   DockerRunnerOptions
+	opts   DockerOptions
 }
 
-// DockerRunnerOptions represents configuration options for the Docker runner.
-type DockerRunnerOptions struct {
+// DockerOptions represents configuration options for the Docker runner.
+type DockerOptions struct {
 	// The Docker image to use (required)
 	Image string `json:"image"`
 
@@ -75,7 +75,7 @@ type DockerRunnerOptions struct {
 
 // GetBaseDockerCommand creates the common parts of a docker run command with all configured options.
 // It returns a slice of command parts that can be further customized by the calling method.
-func (o *DockerRunnerOptions) GetBaseDockerCommand(env []string) []string {
+func (o *DockerOptions) GetBaseDockerCommand(env []string) []string {
 	// Start with basic docker run command
 	parts := []string{"docker run --rm"}
 
@@ -156,7 +156,7 @@ func (o *DockerRunnerOptions) GetBaseDockerCommand(env []string) []string {
 }
 
 // GetDockerCommand constructs the docker run command with a script file.
-func (o *DockerRunnerOptions) GetDockerCommand(scriptFile string, env []string) string {
+func (o *DockerOptions) GetDockerCommand(scriptFile string, env []string) string {
 	// Get base docker command parts
 	parts := o.GetBaseDockerCommand(env)
 
@@ -175,7 +175,7 @@ func (o *DockerRunnerOptions) GetDockerCommand(scriptFile string, env []string) 
 
 // GetDirectExecutionCommand constructs the docker run command for direct executable execution.
 // This is used to optimize the case where we're just running a single executable without a temp script.
-func (o *DockerRunnerOptions) GetDirectExecutionCommand(cmd string, env []string) string {
+func (o *DockerOptions) GetDirectExecutionCommand(cmd string, env []string) string {
 	// Get base docker command parts
 	parts := o.GetBaseDockerCommand(env)
 
@@ -187,9 +187,9 @@ func (o *DockerRunnerOptions) GetDirectExecutionCommand(cmd string, env []string
 	return strings.Join(parts, " ")
 }
 
-// NewDockerRunnerOptions extracts Docker-specific options from generic runner options.
-func NewDockerRunnerOptions(genericOpts RunnerOptions) (DockerRunnerOptions, error) {
-	opts := DockerRunnerOptions{
+// NewDockerOptions extracts Docker-specific options from generic runner options.
+func NewDockerOptions(genericOpts Options) (DockerOptions, error) {
+	opts := DockerOptions{
 		AllowNetworking:  true, // Default to allowing networking
 		User:             "",   // Default to Docker's default user
 		WorkDir:          "",   // Default to Docker's default working directory
@@ -308,27 +308,27 @@ func NewDockerRunnerOptions(genericOpts RunnerOptions) (DockerRunnerOptions, err
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// NewDockerRunner creates a new Docker runner with the specified options.
-func NewDockerRunner(options RunnerOptions, logger *common.Logger) (*DockerRunner, error) {
+// NewDocker creates a new Docker runner with the specified options.
+func NewDocker(options Options, logger *common.Logger) (*Docker, error) {
 	if logger == nil {
 		logger = common.GetLogger()
 	}
 
-	dockerOpts, err := NewDockerRunnerOptions(options)
+	dockerOpts, err := NewDockerOptions(options)
 	if err != nil {
 		return nil, err
 	}
 
 	// Docker executable and daemon checks are now handled by CheckImplicitRequirements()
-	return &DockerRunner{
+	return &Docker{
 		logger: logger,
 		opts:   dockerOpts,
 	}, nil
 }
 
-// CheckImplicitRequirements checks if the runner meets its implicit requirements
-// Docker runner requires the docker executable and a running daemon
-func (r *DockerRunner) CheckImplicitRequirements() error {
+// CheckImplicitRequirements checks if the runner meets its implicit requirements.
+// Docker runner requires the docker executable and a running daemon.
+func (r *Docker) CheckImplicitRequirements() error {
 	// Check if docker executable exists
 	if !common.CheckExecutableExists("docker") {
 		return fmt.Errorf("docker executable not found in PATH")
@@ -346,9 +346,9 @@ func (r *DockerRunner) CheckImplicitRequirements() error {
 }
 
 // Run executes the command using Docker.
-func (r *DockerRunner) Run(ctx context.Context, shell string, cmd string, env []string, params map[string]interface{}, tmpfile bool) (string, error) {
+func (r *Docker) Run(ctx context.Context, shell string, cmd string, env []string, params map[string]interface{}, tmpfile bool) (string, error) {
 	// Create an exec runner that we'll use to execute the docker command
-	execRunner, err := NewRunnerExec(RunnerOptions{}, r.logger)
+	execRunner, err := NewExec(Options{}, r.logger)
 	if err != nil {
 		return "", fmt.Errorf("failed to create exec runner: %w", err)
 	}
@@ -393,7 +393,7 @@ func (r *DockerRunner) Run(ctx context.Context, shell string, cmd string, env []
 }
 
 // createScriptFile writes the command to a temporary script file.
-func (r *DockerRunner) createScriptFile(shell string, cmd string, env []string) (string, error) {
+func (r *Docker) createScriptFile(shell string, cmd string, env []string) (string, error) {
 	// Create a temporary file with a specific pattern
 	tmpFile, err := os.CreateTemp("", "mcpshell-docker-*.sh")
 	if err != nil {

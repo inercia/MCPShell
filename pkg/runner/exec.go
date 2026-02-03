@@ -1,4 +1,4 @@
-package command
+package runner
 
 import (
 	"bytes"
@@ -14,43 +14,41 @@ import (
 	"github.com/inercia/MCPShell/pkg/common"
 )
 
-// RunnerExec implements the Runner interface
-type RunnerExec struct {
+// Exec implements the Runner interface for direct command execution
+type Exec struct {
 	logger  *common.Logger
-	options RunnerExecOptions
+	options ExecOptions
 }
 
-// RunnerExecOptions is the options for the RunnerExec
-type RunnerExecOptions struct {
+// ExecOptions is the options for the Exec runner
+type ExecOptions struct {
 	Shell string `json:"shell"`
 }
 
-// NewRunnerExecOptions creates a new RunnerExecOptions from a RunnerOptions
-func NewRunnerExecOptions(options RunnerOptions) (RunnerExecOptions, error) {
-	var reopts RunnerExecOptions
-	opts, err := options.ToJSON()
+// NewExecOptions creates a new ExecOptions from Options
+func NewExecOptions(options Options) (ExecOptions, error) {
+	var opts ExecOptions
+	jsonStr, err := options.ToJSON()
 	if err != nil {
-		return RunnerExecOptions{}, err
+		return ExecOptions{}, err
 	}
-	err = json.Unmarshal([]byte(opts), &reopts)
-	return reopts, err
+	err = json.Unmarshal([]byte(jsonStr), &opts)
+	return opts, err
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-// NewRunnerExec creates a new ExecRunner with the provided logger
-// If logger is nil, a default logger is created
-func NewRunnerExec(options RunnerOptions, logger *common.Logger) (*RunnerExec, error) {
+// NewExec creates a new Exec runner with the provided logger.
+// If logger is nil, a default logger is created.
+func NewExec(options Options, logger *common.Logger) (*Exec, error) {
 	if logger == nil {
 		logger = common.GetLogger()
 	}
 
-	execOptions, err := NewRunnerExecOptions(options)
+	execOptions, err := NewExecOptions(options)
 	if err != nil {
 		return nil, err
 	}
 
-	return &RunnerExec{
+	return &Exec{
 		logger:  logger,
 		options: execOptions,
 	}, nil
@@ -61,7 +59,7 @@ func NewRunnerExec(options RunnerOptions, logger *common.Logger) (*RunnerExec, e
 //
 // Note: For Windows native shells (cmd, powershell), the 'tmpfile' parameter is ignored
 // and commands are executed directly to avoid issues with output capturing.
-func (r *RunnerExec) Run(ctx context.Context, shell string,
+func (r *Exec) Run(ctx context.Context, shell string,
 	command string,
 	env []string, params map[string]interface{},
 	tmpfile bool,
@@ -205,58 +203,9 @@ func (r *RunnerExec) Run(ctx context.Context, shell string,
 	return output, nil
 }
 
-// isCmdShell checks if the given shell is a Windows cmd shell
-func isCmdShell(shell string) bool {
-	shellLower := strings.ToLower(shell)
-	return strings.Contains(shellLower, "cmd") || strings.HasSuffix(shellLower, "cmd.exe")
-}
-
-// isPowerShell checks if the given shell is a PowerShell
-func isPowerShell(shell string) bool {
-	shellLower := strings.ToLower(shell)
-	return strings.Contains(shellLower, "powershell") || strings.HasSuffix(shellLower, "powershell.exe") ||
-		strings.HasSuffix(shellLower, "pwsh.exe")
-}
-
-// isWindowsShell checks if the given shell is a Windows-specific shell (cmd or powershell)
-func isWindowsShell(shell string) bool {
-	return isCmdShell(shell) || isPowerShell(shell)
-}
-
-// getShell returns the shell to use for command execution,
-// using the provided shell, falling back to $SHELL env var,
-// and finally using appropriate default based on OS.
-//
-// Parameters:
-//   - configShell: The configured shell to use (can be empty)
-//
-// Returns:
-//   - The shell executable path to use
-func getShell(configShell string) string {
-	if configShell != "" {
-		return configShell
-	}
-
-	// On Windows, default to cmd.exe if SHELL is not set
-	if runtime.GOOS == "windows" {
-		shell := os.Getenv("COMSPEC") // More reliable on Windows
-		if shell != "" {
-			return shell
-		}
-		return "cmd.exe" // Fallback for Windows
-	}
-
-	shell := os.Getenv("SHELL")
-	if shell != "" {
-		return shell
-	}
-
-	return "/bin/sh" // Default for Unix-like systems
-}
-
-// CheckImplicitRequirements checks if the runner meets its implicit requirements
-// Exec runner has no special requirements
-func (r *RunnerExec) CheckImplicitRequirements() error {
+// CheckImplicitRequirements checks if the runner meets its implicit requirements.
+// Exec runner has no special requirements.
+func (r *Exec) CheckImplicitRequirements() error {
 	// No special requirements for the basic exec runner
 	return nil
 }

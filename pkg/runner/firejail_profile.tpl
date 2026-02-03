@@ -52,3 +52,4 @@ seccomp
 caps.drop all
 noroot
 {{ end }} 
+

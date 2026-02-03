@@ -1,6 +1,6 @@
 //go:build windows
 
-package command
+package runner
 
 import (
 	"runtime"
@@ -30,8 +30,8 @@ func getShellCommandArgs(shell string, command string) (string, []string) {
 	return shell, []string{"-c", command}
 }
 
-// shouldUseUnixTimeoutCommand returns whether to use the Unix-style timeout command
-func shouldUseUnixTimeoutCommand() bool {
+// ShouldUseUnixTimeoutCommand returns whether to use the Unix-style timeout command
+func ShouldUseUnixTimeoutCommand() bool {
 	// On Windows, we don't use Unix-style timeout command even if a 'timeout' command exists
 	// because Windows 'timeout' is for pausing, not for limiting execution time
 	return false

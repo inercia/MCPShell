@@ -1,4 +1,4 @@
-package command
+package runner
 
 import (
 	"context"
@@ -10,46 +10,46 @@ import (
 	"github.com/inercia/MCPShell/pkg/common"
 )
 
-func TestNewRunnerExecOptions(t *testing.T) {
+func TestNewExecOptions(t *testing.T) {
 	tests := []struct {
 		name    string
-		options RunnerOptions
-		want    RunnerExecOptions
+		options Options
+		want    ExecOptions
 		wantErr bool
 	}{
 		{
 			name: "valid options with shell",
-			options: RunnerOptions{
+			options: Options{
 				"shell": "/bin/bash",
 			},
-			want: RunnerExecOptions{
+			want: ExecOptions{
 				Shell: "/bin/bash",
 			},
 			wantErr: false,
 		},
 		{
 			name:    "empty options",
-			options: RunnerOptions{},
-			want:    RunnerExecOptions{},
+			options: Options{},
+			want:    ExecOptions{},
 			wantErr: false,
 		},
 		{
 			name: "options with additional fields",
-			options: RunnerOptions{
+			options: Options{
 				"shell": "/bin/zsh",
 				"extra": "value",
 			},
-			want: RunnerExecOptions{
+			want: ExecOptions{
 				Shell: "/bin/zsh",
 			},
 			wantErr: false,
 		},
 		{
 			name: "options with numeric shell as string",
-			options: RunnerOptions{
+			options: Options{
 				"shell": "123",
 			},
-			want: RunnerExecOptions{
+			want: ExecOptions{
 				Shell: "123",
 			},
 			wantErr: false,
@@ -58,19 +58,19 @@ func TestNewRunnerExecOptions(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := NewRunnerExecOptions(tt.options)
+			got, err := NewExecOptions(tt.options)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("NewRunnerExecOptions() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("NewExecOptions() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NewRunnerExecOptions() = %v, want %v", got, tt.want)
+				t.Errorf("NewExecOptions() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-func TestRunnerExec_Run(t *testing.T) {
+func TestExec_Run(t *testing.T) {
 	tests := []struct {
 		name    string
 		shell   string
@@ -107,14 +107,14 @@ func TestRunnerExec_Run(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			logger, _ := common.NewLogger("test-runner-exec: ", "", common.LogLevelInfo, false)
-			r, err := NewRunnerExec(RunnerOptions{}, logger)
+			r, err := NewExec(Options{}, logger)
 			if err != nil {
-				t.Fatalf("Failed to create RunnerExec: %v", err)
+				t.Fatalf("Failed to create Exec: %v", err)
 			}
 
 			got, err := r.Run(context.Background(), tt.shell, tt.command, tt.env, tt.params, true)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("RunnerExec.Run() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("Exec.Run() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 
@@ -122,19 +122,19 @@ func TestRunnerExec_Run(t *testing.T) {
 			got = strings.TrimSpace(got)
 
 			if got != tt.want {
-				t.Errorf("RunnerExec.Run() = %q, want %q", got, tt.want)
+				t.Errorf("Exec.Run() = %q, want %q", got, tt.want)
 			}
 		})
 	}
 }
 
-func TestRunnerExec_RunWithEnvExpansion(t *testing.T) {
+func TestExec_RunWithEnvExpansion(t *testing.T) {
 	// This test demonstrates using the -c flag to execute a command with environment variable expansion
 	logger, _ := common.NewLogger("test-runner-exec-env: ", "", common.LogLevelInfo, false)
 
-	r, err := NewRunnerExec(RunnerOptions{}, logger)
+	r, err := NewExec(Options{}, logger)
 	if err != nil {
-		t.Fatalf("Failed to create RunnerExec: %v", err)
+		t.Fatalf("Failed to create Exec: %v", err)
 	}
 
 	command := "echo $TEST_VAR"
@@ -153,7 +153,7 @@ func TestRunnerExec_RunWithEnvExpansion(t *testing.T) {
 	)
 
 	if err != nil {
-		t.Fatalf("RunnerExec.Run() error = %v", err)
+		t.Fatalf("Exec.Run() error = %v", err)
 	}
 
 	output = strings.TrimSpace(output)
@@ -161,35 +161,5 @@ func TestRunnerExec_RunWithEnvExpansion(t *testing.T) {
 
 	if output != expected {
 		t.Errorf("Environment variable expansion failed: got %q, want %q", output, expected)
-	}
-}
-
-func TestRunnerExec_Optimization_SingleExecutable(t *testing.T) {
-	logger, _ := common.NewLogger("test-runner-exec-opt: ", "", common.LogLevelInfo, false)
-	r, err := NewRunnerExec(RunnerOptions{}, logger)
-	if err != nil {
-		t.Fatalf("Failed to create RunnerExec: %v", err)
-	}
-
-	// This command should be a single executable and run directly
-	command := "whoami"
-	output, err := r.Run(context.Background(), "", command, nil, nil, false)
-	if err != nil {
-		t.Errorf("Expected '%s' to run without error, got: %v", command, err)
-	}
-	if len(strings.TrimSpace(output)) == 0 {
-		t.Errorf("Expected output from '%s', got empty string", command)
-	}
-
-	// This command has arguments and should be run via a shell, not directly.
-	// isSingleExecutableCommand should return false.
-	// The command itself should succeed when run through the shell.
-	commandWithArgs := "echo hello"
-	output, err = r.Run(context.Background(), "", commandWithArgs, nil, nil, false)
-	if err != nil {
-		t.Errorf("Expected '%s' to run without error, got: %v", commandWithArgs, err)
-	}
-	if strings.TrimSpace(output) != "hello" {
-		t.Errorf("Expected output from '%s' to be 'hello', got %q", commandWithArgs, output)
 	}
 }
