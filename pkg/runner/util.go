@@ -40,3 +40,15 @@ func contains(slice []string, item string) bool {
 	}
 	return false
 }
+
+// shellQuote returns a shell-safe quoted string.
+// It uses single quotes and escapes any single quotes within the string.
+func shellQuote(s string) string {
+	// If the string contains no special characters, return as-is
+	if !strings.ContainsAny(s, " \t\n'\"\\$`!*?[]{}();<>&|") {
+		return s
+	}
+	// Use single quotes and escape any single quotes by ending the quoted string,
+	// adding an escaped single quote, and starting a new quoted string
+	return "'" + strings.ReplaceAll(s, "'", "'\"'\"'") + "'"
+}
