@@ -121,20 +121,17 @@ Take a look at all the command in [this document](docs/usage.md).
 Configuration files use a YAML format defined [here](docs/config.md).
 See the [this directory](examples) for some examples.
 
-For deploying MCPShell in containers and Kubernetes, see the [Container Deployment Guide](docs/mcp-containers.md).
+For deploying MCPShell in containers and Kubernetes, see the [Container Deployment Guide](docs/usage-containers.md).
 
 ## Agent Mode
 
-MCPShell can also be run in agent mode, providing direct connectivity between Large Language Models
-(LLMs) and your command-line tools without requiring a separate MCP client. In this mode,
-MCPShell connects to an OpenAI-compatible API (including local LLMs like Ollama), makes your
-tools available to the model, executes requested tool operations, and manages the conversation flow.
-This enables the creation of specialized AI assistants that can autonomously perform system tasks
-using the tools you define in your configuration. The agent mode supports both interactive
-conversations and one-shot executions, and allows you to define system and user prompts directly
-in your configuration files.
+For AI agent functionality that connects LLMs directly to tools, see the
+[**Don**](https://github.com/inercia/don) project. Don provides:
 
-For detailed information on using agent mode, see the [Agent Mode documentation](docs/usage-agent.md).
+- Direct LLM connectivity without requiring a separate MCP client
+- RAG (Retrieval-Augmented Generation) support
+- Multi-agent architecture
+- Uses MCPShell's tool configuration format
 
 ## Security Considerations
 
