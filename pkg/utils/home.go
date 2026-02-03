@@ -13,6 +13,8 @@ const (
 	MCPShellDirEnv = "MCPSHELL_DIR"
 	// MCPShellToolsDirEnv is the environment variable that specifies the tools directory for MCPShell
 	MCPShellToolsDirEnv = "MCPSHELL_TOOLS_DIR"
+	// MCPShellAgentConfigEnv is the environment variable that specifies the agent configuration file path
+	MCPShellAgentConfigEnv = "MCPSHELL_AGENT_CONFIG"
 	// MCPShellHome is the name of the configuration directory for MCPShell
 	MCPShellHome = ".mcpshell"
 	// MCPShellToolsDir is the name of the tools directory within MCPShell home
