@@ -423,12 +423,13 @@ func (r *Docker) createScriptFile(shell string, cmd string, env []string) (strin
 		r.logger.Debug("Added preparation command to script: %s", r.opts.PrepareCommand)
 	}
 
-	// Add the main command
+	// Add the main command (trim whitespace to avoid issues with trailing newlines from YAML literal blocks)
 	content.WriteString("# Main command to execute\n")
+	trimmedCmd := strings.TrimSpace(cmd)
 	if shell != "" {
-		fmt.Fprintf(&content, "exec %s -c %q\n", shell, cmd)
+		fmt.Fprintf(&content, "exec %s -c %q\n", shell, trimmedCmd)
 	} else {
-		fmt.Fprintf(&content, "exec sh -c %q\n", cmd)
+		fmt.Fprintf(&content, "exec sh -c %q\n", trimmedCmd)
 	}
 
 	// Write the content to the file
