@@ -1,6 +1,7 @@
 # Configuration File
 
-**Claude Desktop** from Anthropic can talk to MCPShell running in http mode on localhost.
+**Claude Desktop** from Anthropic can talk to MCPShell running in http mode on
+localhost.
 
 ## Prerequisites
 
@@ -8,7 +9,8 @@ None.
 
 ## Basic Structure
 
-The configuration file for **Claude Desktop** is typically located in ~/.config/Claude as **claude_desktop_config.json**. Below are the basic elements required in the file:
+The configuration file for **Claude Desktop** is typically located in ~/.config/Claude
+as **claude_desktop_config.json**. Below are the basic elements required in the file:
 
 ```
 {

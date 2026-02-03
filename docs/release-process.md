@@ -4,7 +4,8 @@ This document describes how to create a new release of MCPShell.
 
 ## Automated Release with GitHub Actions
 
-MCPShell uses [GoReleaser](https://goreleaser.com/) and GitHub Actions to automatically build and publish releases when a new tag is pushed.
+MCPShell uses [GoReleaser](https://goreleaser.com/) and GitHub Actions to automatically
+build and publish releases when a new tag is pushed.
 
 ### Prerequisites
 
@@ -15,10 +16,11 @@ MCPShell uses [GoReleaser](https://goreleaser.com/) and GitHub Actions to automa
 ### Creating a Release
 
 1. **Prepare the release** (automated via Makefile):
+
    ```bash
    make release
    ```
-   
+
    This will:
    - Check that your repository is clean
    - Show existing tags
@@ -28,11 +30,13 @@ MCPShell uses [GoReleaser](https://goreleaser.com/) and GitHub Actions to automa
    - Create the git tag locally
 
 2. **Push the tag to trigger the release**:
+
    ```bash
    git push origin main v1.2.3
    ```
-   
-   Replace `v1.2.3` with your actual tag. The Makefile output will show you the exact command to run.
+
+   Replace `v1.2.3` with your actual tag. The Makefile output will show you the exact
+   command to run.
 
 3. **GitHub Actions will automatically**:
    - Run all tests
@@ -49,13 +53,13 @@ MCPShell uses [GoReleaser](https://goreleaser.com/) and GitHub Actions to automa
 
 The release process builds binaries for the following platforms:
 
-| OS      | Architecture | Format  |
-|---------|--------------|---------|
-| Linux   | amd64        | tar.gz  |
-| Linux   | arm64        | tar.gz  |
-| macOS   | amd64 (Intel)| tar.gz  |
+| OS      | Architecture          | Format |
+| ------- | --------------------- | ------ |
+| Linux   | amd64                 | tar.gz |
+| Linux   | arm64                 | tar.gz |
+| macOS   | amd64 (Intel)         | tar.gz |
 | macOS   | arm64 (Apple Silicon) | tar.gz |
-| Windows | amd64        | zip     |
+| Windows | amd64                 | zip    |
 
 ### Testing Releases Locally
 
@@ -69,7 +73,8 @@ make release-test
 make release-snapshot
 ```
 
-The snapshot release will create all binaries in the `./dist/` directory without creating a GitHub release.
+The snapshot release will create all binaries in the `./dist/` directory without
+creating a GitHub release.
 
 ## Version Numbering
 
@@ -82,6 +87,7 @@ MCPShell follows [Semantic Versioning](https://semver.org/):
 ### Pre-release Versions
 
 You can also create pre-release versions:
+
 - Alpha: `v1.2.0-alpha.1`
 - Beta: `v1.2.0-beta.1`
 - Release Candidate: `v1.2.0-rc.1`
@@ -90,7 +96,8 @@ GoReleaser will automatically mark these as pre-releases on GitHub.
 
 ## Changelog Generation
 
-The changelog is automatically generated from commit messages. To ensure good changelogs, follow these commit message conventions:
+The changelog is automatically generated from commit messages. To ensure good
+changelogs, follow these commit message conventions:
 
 - `feat: ...` - New features
 - `fix: ...` - Bug fixes
@@ -100,6 +107,7 @@ The changelog is automatically generated from commit messages. To ensure good ch
 - `chore: ...` - Maintenance tasks (excluded from changelog)
 
 Example:
+
 ```
 feat: add support for custom templates
 fix: resolve timeout issue in agent runtime
@@ -170,6 +178,7 @@ This ensures that the main branch is always in a releasable state.
 If you need to create a release without using GitHub Actions:
 
 1. Install GoReleaser:
+
    ```bash
    brew install goreleaser  # macOS
    # or
@@ -177,6 +186,7 @@ If you need to create a release without using GitHub Actions:
    ```
 
 2. Create and push the tag:
+
    ```bash
    git tag -a v1.2.3 -m "Version 1.2.3"
    git push origin v1.2.3
@@ -188,4 +198,5 @@ If you need to create a release without using GitHub Actions:
    goreleaser release --clean
    ```
 
-This is not recommended for regular releases but can be useful for testing or emergency situations.
+This is not recommended for regular releases but can be useful for testing or emergency
+situations.

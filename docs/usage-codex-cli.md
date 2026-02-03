@@ -1,6 +1,9 @@
 # Configuration File
 
-The **Codex CLI** from OpenAI can talk to MCPShell running in http mode on localhost. By design, **Codex CLI** wants to speak MCP over stdio (which is a mode fully supported by MCPShell). However, if you want to use MCPShell in a centralized manner (as a server), you will need to install mcp-proxy.
+The **Codex CLI** from OpenAI can talk to MCPShell running in http mode on localhost. By
+design, **Codex CLI** wants to speak MCP over stdio (which is a mode fully supported by
+MCPShell). However, if you want to use MCPShell in a centralized manner (as a server),
+you will need to install mcp-proxy.
 
 ## Prerequisites
 
@@ -8,7 +11,8 @@ A working install of **mcp-proxy**. On many systems this can be installed using 
 
 ## Basic Structure
 
-The configuration file for codex is typically located in ~/.codex as **config.toml**. Below are the basic elements required in the file:
+The configuration file for codex is typically located in ~/.codex as **config.toml**.
+Below are the basic elements required in the file:
 
 ```
 # (Optional) general preferences

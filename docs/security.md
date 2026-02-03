@@ -2,7 +2,9 @@
 
 ## ⚠️ WARNING: Potential Security Risks
 
-The MCPShell allows Large Language Models (LLMs) to execute commands on your local machine. This functionality comes with significant security implications that all users must understand before deployment.
+The MCPShell allows Large Language Models (LLMs) to execute commands on your local
+machine. This functionality comes with significant security implications that all users
+must understand before deployment.
 
 ## Primary Security Concerns
 
@@ -10,19 +12,26 @@ The MCPShell allows Large Language Models (LLMs) to execute commands on your loc
 
 When you allow an LLM to execute shell commands on your system:
 
-- **Data Destruction**: An LLM could issue commands that delete files or directories (`rm -rf`, etc.)
-- **Data Exfiltration**: Commands could be used to send your sensitive data to external servers
+- **Data Destruction**: An LLM could issue commands that delete files or directories
+  (`rm -rf`, etc.)
+- **Data Exfiltration**: Commands could be used to send your sensitive data to external
+  servers
 - **System Modification**: System configurations could be altered in harmful ways
-- **Resource Exhaustion**: Commands could be designed to consume excessive CPU, memory, or disk space
-- **Privilege Escalation**: If running with elevated permissions, the damage potential increases significantly
+- **Resource Exhaustion**: Commands could be designed to consume excessive CPU, memory,
+  or disk space
+- **Privilege Escalation**: If running with elevated permissions, the damage potential
+  increases significantly
 
 ### Parameter Injection Risks
 
 Even with "safe" commands, parameters can be dangerous:
 
-- **Path Traversal**: Parameters containing `../` sequences could access files outside expected directories
-- **Command Injection**: Parameters containing shell metacharacters (`;`, `&&`, `|`, etc.) could execute additional unintended commands
-- **Resource Overloading**: Parameters designed to trigger excessive resource usage (e.g., extremely large file sizes)
+- **Path Traversal**: Parameters containing `../` sequences could access files outside
+  expected directories
+- **Command Injection**: Parameters containing shell metacharacters (`;`, `&&`, `|`,
+  etc.) could execute additional unintended commands
+- **Resource Overloading**: Parameters designed to trigger excessive resource usage
+  (e.g., extremely large file sizes)
 
 ## Best Practices for Secure Usage
 
@@ -50,7 +59,8 @@ Always define and enforce constraints on commands:
 
 - **Allowlist-based approach**: Only permit specific, pre-approved commands
 - **Directory restrictions**: Limit file operations to specific directories
-- **Command pattern validation**: Ensure commands match expected patterns before execution
+- **Command pattern validation**: Ensure commands match expected patterns before
+  execution
 - **Parameter validation**: Validate all parameters against strict rules
 
 ### 3. Parameter Validation
@@ -94,7 +104,10 @@ Example constraint approach:
 
 **THE MCPShell IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED.**
 
-By using the MCPShell, you acknowledge and accept all risks associated with allowing an LLM to execute commands on your system. The developers, contributors, and associated organizations are not responsible for any damage, data loss, security breaches, or other negative consequences resulting from the use of this software.
+By using the MCPShell, you acknowledge and accept all risks associated with allowing an
+LLM to execute commands on your system. The developers, contributors, and associated
+organizations are not responsible for any damage, data loss, security breaches, or other
+negative consequences resulting from the use of this software.
 
 It is your responsibility to:
 
@@ -108,4 +121,6 @@ It is your responsibility to:
 
 ## Reporting Security Issues
 
-If you discover security vulnerabilities in the MCPShell, please report them responsibly by [creating an issue](https://github.com/inercia/MCPShell/issues) with appropriate security labels.
+If you discover security vulnerabilities in the MCPShell, please report them responsibly
+by [creating an issue](https://github.com/inercia/MCPShell/issues) with appropriate
+security labels.
