@@ -235,25 +235,25 @@ func TestDocker_Run_PrepareCommand(t *testing.T) {
 
 	logger, _ := common.NewLogger("test-docker: ", "", common.LogLevelInfo, false)
 
-	// Create a runner with alpine image and prepare command to install grep
+	// Create a runner with alpine image and prepare command that creates a test file
 	r, err := NewDocker(Options{
 		"image":           "alpine:latest",
-		"prepare_command": "apk add --no-cache grep",
+		"prepare_command": "echo 'Preparation successful' > /tmp/prepare_test.txt",
 	}, logger)
 
 	if err != nil {
 		t.Fatalf("Failed to create Docker runner: %v", err)
 	}
 
-	// Run grep command that should only work if the prepare_command executed properly
-	output, err := r.Run(context.Background(), "", "grep --version | head -n 1", nil, nil, false)
+	// Run command that reads the file created by prepare_command
+	output, err := r.Run(context.Background(), "", "cat /tmp/prepare_test.txt", nil, nil, false)
 	if err != nil {
 		t.Errorf("Failed to run command that requires prepare_command: %v", err)
 	}
 
-	// Check the output contains grep version information
-	if !strings.Contains(output, "grep") {
-		t.Errorf("Expected output to contain grep version information, got: %q", output)
+	// Check the output contains the expected text from prepare_command
+	if !strings.Contains(output, "Preparation successful") {
+		t.Errorf("Expected output to contain 'Preparation successful', got: %q", output)
 	}
 }
 
