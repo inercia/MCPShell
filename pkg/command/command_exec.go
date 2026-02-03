@@ -17,13 +17,16 @@ import (
 // Parameters:
 //   - ctx: Context for command execution
 //   - params: Map of parameter names to their values
-//   - extraRunnerOpts: Additional runner options to apply
 //
 // Returns:
 //   - The command output as a string
 //   - A slice of failed constraint messages
 //   - An error if command execution fails
-func (h *CommandHandler) executeToolCommand(ctx context.Context, params map[string]interface{}, extraRunnerOpts map[string]interface{}) (string, []string, error) {
+//
+// Security note: Runner options are only taken from the server-side tool configuration.
+// External callers (MCP clients, CLI users) cannot override runner options to prevent
+// privilege escalation attacks (e.g., specifying a different Docker image or user).
+func (h *CommandHandler) executeToolCommand(ctx context.Context, params map[string]interface{}) (string, []string, error) {
 	// Log the tool execution
 	h.logger.Debug("Tool execution requested for '%s'", h.toolName)
 	h.logger.Debug("Arguments: %v", params)
@@ -141,18 +144,11 @@ func (h *CommandHandler) executeToolCommand(ctx context.Context, params map[stri
 		}
 	}
 
-	// Start with the configured runner options from the tool definition
+	// Use the configured runner options from the tool definition only
+	// (external callers cannot override these for security reasons)
 	runnerOptions := runner.Options{}
 	for k, v := range h.runnerOpts {
 		runnerOptions[k] = v
-	}
-
-	// Add or override with any options from the parameters if present
-	if extraRunnerOpts != nil {
-		h.logger.Debug("Found runner options in parameters: %v", extraRunnerOpts)
-		for k, v := range extraRunnerOpts {
-			runnerOptions[k] = v
-		}
 	}
 
 	// Create the appropriate runner with options
@@ -203,19 +199,10 @@ func (h *CommandHandler) executeToolCommand(ctx context.Context, params map[stri
 //   - The command output as a string
 //   - An error if command execution fails
 func (h *CommandHandler) ExecuteCommand(params map[string]interface{}) (string, error) {
-	// Extract runner options if present
-	var runnerOpts map[string]interface{}
-	if opts, ok := params["options"].(map[string]interface{}); ok {
-		runnerOpts = opts
-		// Remove options from params to avoid processing them as command parameters
-		tmpParams := make(map[string]interface{})
-		for k, v := range params {
-			if k != "options" {
-				tmpParams[k] = v
-			}
-		}
-		params = tmpParams
-	}
+	// NOTE: Runner options are NOT extracted from params for security reasons.
+	// Runner options must be defined in the tool configuration only.
+	// This prevents users from overriding security-sensitive settings like
+	// Docker image, user, or network configuration through command-line parameters.
 
 	// Create context with timeout for command execution
 	// Use configured timeout if available, otherwise use a default of 60 seconds
@@ -231,7 +218,7 @@ func (h *CommandHandler) ExecuteCommand(params map[string]interface{}) (string, 
 	defer cancel()
 
 	// Use the common implementation
-	output, failedConstraints, err := h.executeToolCommand(ctx, params, runnerOpts)
+	output, failedConstraints, err := h.executeToolCommand(ctx, params)
 
 	// If constraints failed, format the error message
 	if err != nil && len(failedConstraints) > 0 {

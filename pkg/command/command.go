@@ -124,13 +124,10 @@ func (h *CommandHandler) GetMCPHandler() func(ctx context.Context, request mcp.C
 			}
 		}
 
-		// Extract runner options if present
-		var runnerOpts map[string]interface{}
-		if args != nil {
-			if opts, ok := args["options"].(map[string]interface{}); ok {
-				runnerOpts = opts
-			}
-		}
+		// NOTE: Runner options are NOT extracted from client arguments for security reasons.
+		// Allowing MCP clients to override runner options (like Docker image, user, network
+		// settings) could lead to privilege escalation or arbitrary code execution.
+		// Runner options must be defined server-side in the tool configuration only.
 
 		// Apply timeout if configured
 		executionCtx := ctx
@@ -145,7 +142,7 @@ func (h *CommandHandler) GetMCPHandler() func(ctx context.Context, request mcp.C
 		}
 
 		// Execute the command using the common implementation
-		output, _, err := h.executeToolCommand(executionCtx, args, runnerOpts)
+		output, _, err := h.executeToolCommand(executionCtx, args)
 		if err != nil {
 			return mcp.NewToolResultError(err.Error()), nil
 		}
