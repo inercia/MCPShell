@@ -69,7 +69,7 @@ OUTPUT=$(eval "$CMD" 2>&1)
 RESULT=$?
 [ -n "$E2E_LOG_FILE" ] && echo -e "\n$TEST_NAME:\n\n$OUTPUT" >> "$E2E_LOG_FILE"
 [ $RESULT -eq 0 ] || fail "Test failed with exit code $RESULT" "$OUTPUT"
-echo "$OUTPUT" | grep -q "grep" || fail "Test failed: grep version output not found" "$OUTPUT"
+echo "$OUTPUT" | grep -q "Preparation successful" || fail "Test failed: prepare command output not found" "$OUTPUT"
 
 success "Test passed"
 

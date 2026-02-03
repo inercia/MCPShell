@@ -42,7 +42,7 @@ mcp:
       description: "Run a command with preparation"
       run:
         command: |
-          grep --version
+          cat /tmp/prepare_test.txt
         runners:
           - name: docker
             requirements:
@@ -50,6 +50,6 @@ mcp:
             options:
               image: "alpine:latest"
               prepare_command: |
-                apk add --no-cache grep
+                echo "Preparation successful" > /tmp/prepare_test.txt
       output:
         format: string 

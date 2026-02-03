@@ -149,7 +149,14 @@ func (o *DockerOptions) GetBaseDockerCommand(env []string) []string {
 
 	// Add environment variables
 	for _, e := range env {
-		parts = append(parts, fmt.Sprintf("-e %s", e))
+		// Split on the first '=' to separate key from value
+		envParts := strings.SplitN(e, "=", 2)
+		if len(envParts) == 2 {
+			// Quote the entire key=value pair to handle spaces in values
+			parts = append(parts, fmt.Sprintf("-e %q", e))
+		} else {
+			parts = append(parts, fmt.Sprintf("-e %s", e))
+		}
 	}
 
 	return parts
@@ -411,25 +418,28 @@ func (r *Docker) createScriptFile(shell string, cmd string, env []string) (strin
 	for _, e := range env {
 		parts := strings.SplitN(e, "=", 2)
 		if len(parts) == 2 {
-			fmt.Fprintf(&content, "export %s=%s\n", parts[0], parts[1])
+			// Quote the value to handle spaces and special characters
+			fmt.Fprintf(&content, "export %s=%q\n", parts[0], parts[1])
 		}
 	}
 
 	// Add preparation command if specified
 	if r.opts.PrepareCommand != "" {
 		content.WriteString("\n# Preparation commands\n")
-		content.WriteString(r.opts.PrepareCommand)
+		// Trim any trailing whitespace/newlines from the prepare command
+		trimmedPrepare := strings.TrimSpace(r.opts.PrepareCommand)
+		content.WriteString(trimmedPrepare)
 		content.WriteString("\n\n")
-		r.logger.Debug("Added preparation command to script: %s", r.opts.PrepareCommand)
+		r.logger.Debug("Added preparation command to script: %s", trimmedPrepare)
 	}
 
 	// Add the main command
+	// Always use 'sh' for execution inside Docker containers since we can't assume
+	// bash is available (e.g., Alpine Linux only has sh by default)
 	content.WriteString("# Main command to execute\n")
-	if shell != "" {
-		fmt.Fprintf(&content, "exec %s -c %q\n", shell, cmd)
-	} else {
-		fmt.Fprintf(&content, "exec sh -c %q\n", cmd)
-	}
+	// Trim any trailing whitespace/newlines from the command
+	trimmedCmd := strings.TrimSpace(cmd)
+	fmt.Fprintf(&content, "exec sh -c %q\n", trimmedCmd)
 
 	// Write the content to the file
 	if _, err := tmpFile.WriteString(content.String()); err != nil {
