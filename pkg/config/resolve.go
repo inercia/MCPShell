@@ -215,25 +215,25 @@ func createMergedConfigFile(yamlFiles []string, logger *common.Logger) (string, 
 	return tmpFilePath, cleanup, nil
 }
 
-// ResolveMultipleConfigPaths tries to resolve multiple configuration file paths.
+// ResolveMultipleConfigPath tries to resolve multiple tools file paths.
 // It handles each path individually (URLs, directories, local files) and then merges
 // all configurations into a single temporary file.
 // Returns the local path to the merged configuration file and a cleanup function.
-func ResolveMultipleConfigPaths(configPaths []string, logger *common.Logger) (string, func(), error) {
+func ResolveMultipleConfigPath(configs []string, logger *common.Logger) (string, func(), error) {
 	// Default no-op cleanup function
 	noopCleanup := func() {}
 
 	// Return early if no config paths provided
-	if len(configPaths) == 0 {
+	if len(configs) == 0 {
 		return "", noopCleanup, fmt.Errorf("no configuration file paths provided")
 	}
 
 	// If only one path, use the existing single path resolution
-	if len(configPaths) == 1 {
-		return ResolveConfigPath(configPaths[0], logger)
+	if len(configs) == 1 {
+		return ResolveConfigPath(configs[0], logger)
 	}
 
-	logger.Info("Resolving %d configuration paths", len(configPaths))
+	logger.Info("Resolving %d configuration paths", len(configs))
 
 	// Keep track of all temporary files and cleanup functions
 	var allCleanupFuncs []func()
@@ -247,7 +247,7 @@ func ResolveMultipleConfigPaths(configPaths []string, logger *common.Logger) (st
 	}
 
 	// Resolve each config path
-	for i, configPath := range configPaths {
+	for i, configPath := range configs {
 		logger.Debug("Resolving config path %d: %s", i+1, configPath)
 
 		resolvedPath, cleanup, err := ResolveConfigPath(configPath, logger)
@@ -281,6 +281,6 @@ func ResolveMultipleConfigPaths(configPaths []string, logger *common.Logger) (st
 		mergeCleanup()
 	}
 
-	logger.Info("Successfully resolved and merged %d configuration paths", len(configPaths))
+	logger.Info("Successfully resolved and merged %d configuration paths", len(configs))
 	return mergedPath, finalCleanup, nil
 }

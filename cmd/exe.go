@@ -70,7 +70,7 @@ will be reported.
 		logger.Debug("Executing tool: %s", toolName)
 
 		// Load the configuration file(s) (local or remote)
-		localConfigPath, cleanup, err := config.ResolveMultipleConfigPaths(toolsFiles, logger)
+		localConfigPath, cleanup, err := config.ResolveMultipleConfigPath(toolsFiles, logger)
 		if err != nil {
 			logger.Error("Failed to load configuration: %v", err)
 			return fmt.Errorf("failed to load configuration: %w", err)
