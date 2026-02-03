@@ -80,7 +80,7 @@ and ignore SIGHUP signals.
 		}
 
 		// Load the configuration file(s) (local or remote)
-		localConfigPath, cleanup, err := config.ResolveMultipleConfigPath(toolsFiles, logger)
+		localConfigPath, cleanup, err := config.ResolveMultipleConfigPaths(toolsFiles, logger)
 		if err != nil {
 			logger.Error("Failed to load configuration: %v", err)
 			return fmt.Errorf("failed to load configuration: %w", err)
