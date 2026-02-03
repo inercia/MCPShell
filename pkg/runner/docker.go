@@ -426,7 +426,7 @@ func (r *Docker) createScriptFile(shell string, cmd string, env []string) (strin
 	// Add preparation command if specified
 	if r.opts.PrepareCommand != "" {
 		content.WriteString("\n# Preparation commands\n")
-		// Trim any trailing whitespace/newlines from the prepare command
+		// Trim leading and trailing whitespace/newlines from the prepare command
 		trimmedPrepare := strings.TrimSpace(r.opts.PrepareCommand)
 		content.WriteString(trimmedPrepare)
 		content.WriteString("\n\n")
@@ -434,11 +434,11 @@ func (r *Docker) createScriptFile(shell string, cmd string, env []string) (strin
 	}
 
 	// Add the main command
+	content.WriteString("# Main command to execute\n")
+	// Trim leading and trailing whitespace/newlines from the command to avoid quoting issues
+	trimmedCmd := strings.TrimSpace(cmd)
 	// Always use 'sh' for execution inside Docker containers since we can't assume
 	// bash is available (e.g., Alpine Linux only has sh by default)
-	content.WriteString("# Main command to execute\n")
-	// Trim any trailing whitespace/newlines from the command
-	trimmedCmd := strings.TrimSpace(cmd)
 	fmt.Fprintf(&content, "exec sh -c %q\n", trimmedCmd)
 
 	// Write the content to the file
