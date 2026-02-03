@@ -1,10 +1,13 @@
 # Running MCPShell in Containers
 
-This document explains how to build specialized container images for running MCPShell as an MCP server, and how to deploy them in container orchestration platforms like Kubernetes.
+This document explains how to build specialized container images for running MCPShell as
+an MCP server, and how to deploy them in container orchestration platforms like
+Kubernetes.
 
 ## Building a Container Image with MCPShell
 
-Container images provide a portable and reproducible way to package MCPShell along with your tool configurations. This approach is particularly useful for:
+Container images provide a portable and reproducible way to package MCPShell along with
+your tool configurations. This approach is particularly useful for:
 
 - **Consistent deployments** across different environments
 - **Version control** of both MCPShell and your tool configurations
@@ -13,7 +16,8 @@ Container images provide a portable and reproducible way to package MCPShell alo
 
 ### Multi-Stage Dockerfile Example
 
-Here's a simplified multi-stage Dockerfile that builds MCPShell and packages it with a configuration file:
+Here's a simplified multi-stage Dockerfile that builds MCPShell and packages it with a
+configuration file:
 
 ```dockerfile
 # Stage 1: Build MCPShell
@@ -142,11 +146,13 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 
 ## Running in Kubernetes
 
-Kubernetes provides excellent orchestration capabilities for running MCPShell servers at scale.
+Kubernetes provides excellent orchestration capabilities for running MCPShell servers at
+scale.
 
 ### Basic Deployment Example
 
-Here's a simplified Kubernetes deployment that uses a ConfigMap for the tools configuration:
+Here's a simplified Kubernetes deployment that uses a ConfigMap for the tools
+configuration:
 
 ```yaml
 ---
@@ -199,43 +205,43 @@ spec:
         app: mcpshell
     spec:
       containers:
-      - name: mcpshell
-        image: my-mcp-server:latest
-        imagePullPolicy: IfNotPresent
-        ports:
-        - containerPort: 8080
-          name: http
-          protocol: TCP
-        volumeMounts:
-        - name: config
-          mountPath: /etc/mcpshell
-          readOnly: true
-        env:
-        - name: LOG_LEVEL
-          value: "info"
-        resources:
-          requests:
-            memory: "64Mi"
-            cpu: "100m"
-          limits:
-            memory: "256Mi"
-            cpu: "500m"
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 8080
-          initialDelaySeconds: 10
-          periodSeconds: 30
-        readinessProbe:
-          httpGet:
-            path: /health
-            port: 8080
-          initialDelaySeconds: 5
-          periodSeconds: 10
+        - name: mcpshell
+          image: my-mcp-server:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+              name: http
+              protocol: TCP
+          volumeMounts:
+            - name: config
+              mountPath: /etc/mcpshell
+              readOnly: true
+          env:
+            - name: LOG_LEVEL
+              value: "info"
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
       volumes:
-      - name: config
-        configMap:
-          name: mcpshell-config
+        - name: config
+          configMap:
+            name: mcpshell-config
 
 ---
 apiVersion: v1
@@ -247,9 +253,9 @@ spec:
   selector:
     app: mcpshell
   ports:
-  - protocol: TCP
-    port: 80
-    targetPort: 8080
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
   type: ClusterIP
 ```
 
@@ -282,25 +288,25 @@ spec:
   template:
     spec:
       containers:
-      - name: mcpshell
-        image: my-mcp-server:latest
-        volumeMounts:
-        - name: config
-          mountPath: /etc/mcpshell
-          readOnly: true
-        - name: secrets
-          mountPath: /secrets
-          readOnly: true
-        env:
-        - name: AWS_SHARED_CREDENTIALS_FILE
-          value: "/secrets/aws-credentials"
+        - name: mcpshell
+          image: my-mcp-server:latest
+          volumeMounts:
+            - name: config
+              mountPath: /etc/mcpshell
+              readOnly: true
+            - name: secrets
+              mountPath: /secrets
+              readOnly: true
+          env:
+            - name: AWS_SHARED_CREDENTIALS_FILE
+              value: "/secrets/aws-credentials"
       volumes:
-      - name: config
-        configMap:
-          name: mcpshell-config
-      - name: secrets
-        secret:
-          secretName: mcpshell-secrets
+        - name: config
+          configMap:
+            name: mcpshell-config
+        - name: secrets
+          secret:
+            secretName: mcpshell-secrets
 ```
 
 #### Namespace Isolation
@@ -331,16 +337,16 @@ metadata:
     nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
   rules:
-  - host: mcp.example.com
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: mcpshell-service
-            port:
-              number: 80
+    - host: mcp.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: mcpshell-service
+                port:
+                  number: 80
 ```
 
 #### Horizontal Pod Autoscaling
@@ -361,18 +367,18 @@ spec:
   minReplicas: 2
   maxReplicas: 10
   metrics:
-  - type: Resource
-    resource:
-      name: cpu
-      target:
-        type: Utilization
-        averageUtilization: 70
-  - type: Resource
-    resource:
-      name: memory
-      target:
-        type: Utilization
-        averageUtilization: 80
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
 ```
 
 ### Monitoring and Logging
@@ -386,16 +392,16 @@ spec:
   template:
     spec:
       containers:
-      - name: mcpshell
-        args:
-        - "mcp"
-        - "--tools"
-        - "/etc/mcpshell/tools.yaml"
-        - "--http"
-        - "--port"
-        - "8080"
-        - "--log-level"
-        - "info"
+        - name: mcpshell
+          args:
+            - "mcp"
+            - "--tools"
+            - "/etc/mcpshell/tools.yaml"
+            - "--http"
+            - "--port"
+            - "8080"
+            - "--log-level"
+            - "info"
 ```
 
 Logs will be available through `kubectl logs`:
@@ -419,19 +425,24 @@ spec:
     matchLabels:
       app: mcpshell
   endpoints:
-  - port: http
-    interval: 30s
-    path: /metrics
+    - port: http
+      interval: 30s
+      path: /metrics
 ```
 
 ## Best Practices
 
-1. **Version your images**: Always tag your Docker images with specific versions, not just `latest`
-2. **Resource limits**: Set appropriate CPU and memory limits to prevent resource exhaustion
+1. **Version your images**: Always tag your Docker images with specific versions, not
+   just `latest`
+2. **Resource limits**: Set appropriate CPU and memory limits to prevent resource
+   exhaustion
 3. **Health checks**: Implement proper health and readiness probes
-4. **Security**: Run containers as non-root users and use read-only filesystems where possible
-5. **Configuration management**: Use ConfigMaps for configurations and Secrets for sensitive data
-6. **Logging**: Configure appropriate log levels and ensure logs are collected by your logging infrastructure
+4. **Security**: Run containers as non-root users and use read-only filesystems where
+   possible
+5. **Configuration management**: Use ConfigMaps for configurations and Secrets for
+   sensitive data
+6. **Logging**: Configure appropriate log levels and ensure logs are collected by your
+   logging infrastructure
 7. **Monitoring**: Expose metrics and set up appropriate alerts
 8. **Updates**: Keep MCPShell and base images updated for security patches
 
