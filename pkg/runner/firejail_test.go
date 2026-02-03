@@ -1,4 +1,4 @@
-package command
+package runner
 
 import (
 	"context"
@@ -8,27 +8,27 @@ import (
 	"testing"
 )
 
-func TestNewRunnerFirejail(t *testing.T) {
+func TestNewFirejail(t *testing.T) {
 	// Skip on non-Linux platforms
 	if runtime.GOOS != "linux" {
 		t.Skip("Skipping firejail tests on non-Linux platform")
 	}
 
-	options := RunnerOptions{
+	options := Options{
 		"allow_networking": true,
 	}
 
-	runner, err := NewRunnerFirejail(options, nil)
+	r, err := NewFirejail(options, nil)
 	if err != nil {
 		t.Fatalf("Failed to create firejail runner: %v", err)
 	}
 
-	if runner == nil {
+	if r == nil {
 		t.Fatal("Expected non-nil runner")
 	}
 }
 
-func TestRunnerFirejailRun(t *testing.T) {
+func TestFirejail_Run(t *testing.T) {
 	// Skip on non-Linux platforms
 	if runtime.GOOS != "linux" {
 		t.Skip("Skipping firejail tests on non-Linux platform")
@@ -39,11 +39,11 @@ func TestRunnerFirejailRun(t *testing.T) {
 		t.Skip("Skipping test because firejail is not installed")
 	}
 
-	options := RunnerOptions{
+	options := Options{
 		"allow_networking": true,
 	}
 
-	runner, err := NewRunnerFirejail(options, nil)
+	r, err := NewFirejail(options, nil)
 	if err != nil {
 		t.Fatalf("Failed to create firejail runner: %v", err)
 	}
@@ -51,7 +51,7 @@ func TestRunnerFirejailRun(t *testing.T) {
 	ctx := context.Background()
 
 	// Test simple echo command
-	output, err := runner.Run(ctx, "/bin/sh", "echo hello world", nil, nil, false) // No need for tmpfile here
+	output, err := r.Run(ctx, "/bin/sh", "echo hello world", nil, nil, false)
 	if err != nil {
 		t.Fatalf("Failed to run command: %v", err)
 	}
@@ -61,7 +61,7 @@ func TestRunnerFirejailRun(t *testing.T) {
 	}
 }
 
-func TestRunnerFirejailNetworkRestriction(t *testing.T) {
+func TestFirejail_NetworkRestriction(t *testing.T) {
 	// Skip on non-Linux platforms
 	if runtime.GOOS != "linux" {
 		t.Skip("Skipping firejail tests on non-Linux platform")
@@ -75,47 +75,46 @@ func TestRunnerFirejailNetworkRestriction(t *testing.T) {
 	ctx := context.Background()
 
 	// Test with networking enabled
-	networkEnabledOptions := RunnerOptions{
+	networkEnabledOptions := Options{
 		"allow_networking": true,
 	}
 
-	runnerEnabled, err := NewRunnerFirejail(networkEnabledOptions, nil)
+	runnerEnabled, err := NewFirejail(networkEnabledOptions, nil)
 	if err != nil {
 		t.Fatalf("Failed to create firejail runner: %v", err)
 	}
 
 	// This might succeed or fail depending on network connectivity,
 	// but it should not be blocked by firejail
-	_, _ = runnerEnabled.Run(ctx, "/bin/sh", "ping -c 1 127.0.0.1", nil, nil, false) // No need for tmpfile here
+	_, _ = runnerEnabled.Run(ctx, "/bin/sh", "ping -c 1 127.0.0.1", nil, nil, false)
 
 	// Test with networking disabled
-	networkDisabledOptions := RunnerOptions{
+	networkDisabledOptions := Options{
 		"allow_networking": false,
 	}
 
-	runnerDisabled, err := NewRunnerFirejail(networkDisabledOptions, nil)
+	runnerDisabled, err := NewFirejail(networkDisabledOptions, nil)
 	if err != nil {
 		t.Fatalf("Failed to create firejail runner: %v", err)
 	}
 
 	// This should fail or timeout due to network restrictions
-	// Note: We're not asserting the exact behavior as it might vary based on firejail version
-	_, _ = runnerDisabled.Run(ctx, "/bin/sh", "ping -c 1 127.0.0.1", nil, nil, false) // No need for tmpfile here
+	_, _ = runnerDisabled.Run(ctx, "/bin/sh", "ping -c 1 127.0.0.1", nil, nil, false)
 }
 
-func TestRunnerFirejail_Optimization_SingleExecutable(t *testing.T) {
+func TestFirejail_Optimization_SingleExecutable(t *testing.T) {
 	if runtime.GOOS != "linux" {
 		t.Skip("Skipping firejail tests on non-Linux platform")
 	}
 	if _, err := os.Stat("/usr/bin/firejail"); os.IsNotExist(err) {
 		t.Skip("Skipping test because firejail is not installed")
 	}
-	runner, err := NewRunnerFirejail(RunnerOptions{"allow_networking": true}, nil)
+	r, err := NewFirejail(Options{"allow_networking": true}, nil)
 	if err != nil {
 		t.Fatalf("Failed to create firejail runner: %v", err)
 	}
 	// Should succeed: /bin/ls is a single executable
-	output, err := runner.Run(context.Background(), "", "/bin/ls", nil, nil, false)
+	output, err := r.Run(context.Background(), "", "/bin/ls", nil, nil, false)
 	if err != nil {
 		t.Errorf("Expected /bin/ls to run without error, got: %v", err)
 	}
@@ -123,7 +122,7 @@ func TestRunnerFirejail_Optimization_SingleExecutable(t *testing.T) {
 		t.Errorf("Expected output from /bin/ls, got empty string")
 	}
 	// Should NOT optimize: command with arguments
-	_, err2 := runner.Run(context.Background(), "", "/bin/ls -l", nil, nil, false)
+	_, err2 := r.Run(context.Background(), "", "/bin/ls -l", nil, nil, false)
 	if err2 != nil && !strings.Contains(err2.Error(), "no such file") {
 		t.Logf("Expected failure for /bin/ls -l as a single executable: %v", err2)
 	}

@@ -1,4 +1,4 @@
-package command
+package runner
 
 import (
 	"runtime"
@@ -15,12 +15,12 @@ func TestImplicitRequirements(t *testing.T) {
 	// Test cases for the exec runner
 	t.Run("ExecRunner", func(t *testing.T) {
 		// Exec runner should always pass since it has no requirements
-		runner, err := NewRunnerExec(RunnerOptions{}, logger)
+		r, err := NewExec(Options{}, logger)
 		if err != nil {
 			t.Fatalf("Failed to create exec runner: %v", err)
 		}
 
-		err = runner.CheckImplicitRequirements()
+		err = r.CheckImplicitRequirements()
 		if err != nil {
 			t.Errorf("Exec runner should have no requirements but failed: %v", err)
 		}
@@ -34,13 +34,13 @@ func TestImplicitRequirements(t *testing.T) {
 		}
 
 		// Create the runner
-		runner, err := NewRunnerSandboxExec(RunnerOptions{}, logger)
+		r, err := NewSandboxExec(Options{}, logger)
 		if err != nil {
 			t.Fatalf("Failed to create sandbox-exec runner: %v", err)
 		}
 
 		// Check requirements - expect pass on macOS if executable exists
-		err = runner.CheckImplicitRequirements()
+		err = r.CheckImplicitRequirements()
 		if err != nil {
 			// This is expected if sandbox-exec is not available
 			t.Logf("SandboxExec runner failed as expected if sandbox-exec is not available: %v", err)
@@ -58,13 +58,13 @@ func TestImplicitRequirements(t *testing.T) {
 		}
 
 		// Create the runner
-		runner, err := NewRunnerFirejail(RunnerOptions{}, logger)
+		r, err := NewFirejail(Options{}, logger)
 		if err != nil {
 			t.Fatalf("Failed to create firejail runner: %v", err)
 		}
 
 		// Check requirements - expect pass on Linux if executable exists
-		err = runner.CheckImplicitRequirements()
+		err = r.CheckImplicitRequirements()
 		if err != nil {
 			// This is expected if firejail is not available
 			t.Logf("Firejail runner failed as expected if firejail is not available: %v", err)
@@ -77,17 +77,17 @@ func TestImplicitRequirements(t *testing.T) {
 		// The Docker daemon check will be handled in the DockerRunner itself
 
 		// Create a Docker runner with mock options that satisfy its creation requirements
-		mockOpts := RunnerOptions{
+		mockOpts := Options{
 			"image": "alpine:latest",
 		}
 
-		runner, err := NewDockerRunner(mockOpts, logger)
+		r, err := NewDocker(mockOpts, logger)
 		if err != nil {
 			t.Fatalf("Failed to create docker runner: %v", err)
 		}
 
 		// Check requirements - expect pass if Docker is available and running
-		err = runner.CheckImplicitRequirements()
+		err = r.CheckImplicitRequirements()
 		if err != nil {
 			// This is expected if Docker is not available or daemon is not running
 			t.Logf("Docker runner failed requirements check as expected: %v", err)

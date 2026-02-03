@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/inercia/MCPShell/pkg/common"
+	"github.com/inercia/MCPShell/pkg/runner"
 )
 
 // executeToolCommand handles the core logic of executing a command with the given parameters.
@@ -103,7 +104,7 @@ func (h *CommandHandler) executeToolCommand(ctx context.Context, params map[stri
 
 		// On Unix systems, try to use the 'timeout' command if available, otherwise use context-based timeout
 		// On Windows, always use context-based timeout as 'timeout' command doesn't limit execution time
-		if shouldUseUnixTimeoutCommand() {
+		if runner.ShouldUseUnixTimeoutCommand() {
 			// On Unix/Linux/macOS systems, use timeout command with Unix syntax
 			cmd = fmt.Sprintf("timeout --kill-after=5s %ds sh -c '%s'", timeoutSeconds, escapedCmd)
 			h.logger.Debug("Wrapped command with Unix timeout: %ds", timeoutSeconds)
@@ -123,23 +124,25 @@ func (h *CommandHandler) executeToolCommand(ctx context.Context, params map[stri
 	h.logger.Debug("\n------------------------------------------------------\n%s\n------------------------------------------------------\n", cmd)
 
 	// Determine which runner to use based on the configuration
-	runnerType := RunnerTypeExec // default runner
+	runnerType := runner.TypeExec // default runner
 	if h.runnerType != "" {
 		h.logger.Debug("Using configured runner type: %s", h.runnerType)
 		switch h.runnerType {
-		case string(RunnerTypeExec):
-			runnerType = RunnerTypeExec
-		case string(RunnerTypeSandboxExec):
-			runnerType = RunnerTypeSandboxExec
-		case string(RunnerTypeFirejail):
-			runnerType = RunnerTypeFirejail
+		case string(runner.TypeExec):
+			runnerType = runner.TypeExec
+		case string(runner.TypeSandboxExec):
+			runnerType = runner.TypeSandboxExec
+		case string(runner.TypeFirejail):
+			runnerType = runner.TypeFirejail
+		case string(runner.TypeDocker):
+			runnerType = runner.TypeDocker
 		default:
 			h.logger.Error("Unknown runner type '%s', falling back to default runner", h.runnerType)
 		}
 	}
 
 	// Start with the configured runner options from the tool definition
-	runnerOptions := RunnerOptions{}
+	runnerOptions := runner.Options{}
 	for k, v := range h.runnerOpts {
 		runnerOptions[k] = v
 	}
@@ -154,14 +157,14 @@ func (h *CommandHandler) executeToolCommand(ctx context.Context, params map[stri
 
 	// Create the appropriate runner with options
 	h.logger.Debug("Creating runner of type %s and checking implicit requirements", runnerType)
-	runner, err := NewRunner(runnerType, runnerOptions, h.logger)
+	r, err := runner.New(runnerType, runnerOptions, h.logger)
 	if err != nil {
 		h.logger.Error("Error creating runner: %v", err)
 		return "", nil, fmt.Errorf("error creating runner: %v", err)
 	}
 
 	// Execute the command (timeout is handled by the context passed in from caller)
-	commandOutput, err := runner.Run(ctx, h.shell, cmd, env, params, true)
+	commandOutput, err := r.Run(ctx, h.shell, cmd, env, params, true)
 	if err != nil {
 		h.logger.Error("Error executing command: %v", err)
 		return "", nil, err

@@ -1,4 +1,4 @@
-package command
+package runner
 
 import (
 	"bytes"
@@ -17,18 +17,18 @@ import (
 	"github.com/inercia/MCPShell/pkg/common"
 )
 
-//go:embed runner_sandbox_profile.tpl
+//go:embed sandbox_profile.tpl
 var sandboxProfileTemplate string
 
-// RunnerSandboxExec implements the Runner interface using macOS sandbox-exec
-type RunnerSandboxExec struct {
+// SandboxExec implements the Runner interface using macOS sandbox-exec
+type SandboxExec struct {
 	logger     *common.Logger
 	profileTpl *template.Template
-	options    RunnerSandboxExecOptions
+	options    SandboxExecOptions
 }
 
-// RunnerSandboxExecOptions is the options for the RunnerSandboxExec
-type RunnerSandboxExecOptions struct {
+// SandboxExecOptions is the options for the SandboxExec runner
+type SandboxExecOptions struct {
 	Shell             string   `json:"shell"`
 	AllowNetworking   bool     `json:"allow_networking"`
 	AllowUserFolders  bool     `json:"allow_user_folders"`
@@ -39,22 +39,20 @@ type RunnerSandboxExecOptions struct {
 	CustomProfile     string   `json:"custom_profile"`
 }
 
-// NewRunnerSandboxExecOptions creates a new RunnerSandboxExecOptions from a RunnerOptions
-func NewRunnerSandboxExecOptions(options RunnerOptions) (RunnerSandboxExecOptions, error) {
-	var reopts RunnerSandboxExecOptions
-	opts, err := options.ToJSON()
+// NewSandboxExecOptions creates a new SandboxExecOptions from Options
+func NewSandboxExecOptions(options Options) (SandboxExecOptions, error) {
+	var opts SandboxExecOptions
+	jsonStr, err := options.ToJSON()
 	if err != nil {
-		return RunnerSandboxExecOptions{}, err
+		return SandboxExecOptions{}, err
 	}
-	err = json.Unmarshal([]byte(opts), &reopts)
-	return reopts, err
+	err = json.Unmarshal([]byte(jsonStr), &opts)
+	return opts, err
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-// NewRunnerSandboxExec creates a new RunnerSandboxExec with the provided logger
-// If logger is nil, a default logger is created
-func NewRunnerSandboxExec(options RunnerOptions, logger *common.Logger) (*RunnerSandboxExec, error) {
+// NewSandboxExec creates a new SandboxExec runner with the provided logger.
+// If logger is nil, a default logger is created.
+func NewSandboxExec(options Options, logger *common.Logger) (*SandboxExec, error) {
 	if logger == nil {
 		logger = common.GetLogger()
 	}
@@ -67,24 +65,24 @@ func NewRunnerSandboxExec(options RunnerOptions, logger *common.Logger) (*Runner
 	}
 
 	// Parse sandbox-specific options
-	sandboxOpts, err := NewRunnerSandboxExecOptions(options)
+	sandboxOpts, err := NewSandboxExecOptions(options)
 	if err != nil {
 		logger.Debug("Failed to parse sandbox options: %v", err)
 		return nil, fmt.Errorf("failed to parse sandbox options: %w", err)
 	}
 
-	return &RunnerSandboxExec{
+	return &SandboxExec{
 		logger:     logger,
 		profileTpl: profileTpl,
 		options:    sandboxOpts,
 	}, nil
 }
 
-// Run executes a command inside the macOS sandbox and returns the output
-// It implements the Runner interface
+// Run executes a command inside the macOS sandbox and returns the output.
+// It implements the Runner interface.
 //
 // note: tmpfile is ignored for sandbox because it's not supported
-func (r *RunnerSandboxExec) Run(ctx context.Context, shell string, command string, env []string, params map[string]interface{}, tmpfile bool) (string, error) {
+func (r *SandboxExec) Run(ctx context.Context, shell string, command string, env []string, params map[string]interface{}, tmpfile bool) (string, error) {
 	fullCmd := command
 
 	// Check if context is done
@@ -257,9 +255,9 @@ func (r *RunnerSandboxExec) Run(ctx context.Context, shell string, command strin
 	return outputStr, nil
 }
 
-// CheckImplicitRequirements checks if the runner meets its implicit requirements
-// SandboxExec runner requires macOS and the sandbox-exec executable
-func (r *RunnerSandboxExec) CheckImplicitRequirements() error {
+// CheckImplicitRequirements checks if the runner meets its implicit requirements.
+// SandboxExec runner requires macOS and the sandbox-exec executable.
+func (r *SandboxExec) CheckImplicitRequirements() error {
 	// Sandbox exec is macOS only
 	if runtime.GOOS != "darwin" {
 		return fmt.Errorf("sandbox-exec runner requires macOS")
@@ -271,14 +269,4 @@ func (r *RunnerSandboxExec) CheckImplicitRequirements() error {
 	}
 
 	return nil
-}
-
-// contains checks if a string slice contains a specific string
-func contains(slice []string, item string) bool {
-	for _, s := range slice {
-		if s == item {
-			return true
-		}
-	}
-	return false
 }

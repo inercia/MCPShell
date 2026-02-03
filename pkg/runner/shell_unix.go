@@ -1,6 +1,6 @@
 //go:build !windows
 
-package command
+package runner
 
 import (
 	"strings"
@@ -23,7 +23,7 @@ func getShellCommandArgs(shell string, command string) (string, []string) {
 	return shell, []string{"-c", command}
 }
 
-// shouldUseUnixTimeoutCommand returns whether to use the Unix-style timeout command
-func shouldUseUnixTimeoutCommand() bool {
+// ShouldUseUnixTimeoutCommand returns whether to use the Unix-style timeout command
+func ShouldUseUnixTimeoutCommand() bool {
 	return common.CheckExecutableExists("timeout")
 }

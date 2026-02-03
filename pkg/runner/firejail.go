@@ -1,4 +1,4 @@
-package command
+package runner
 
 import (
 	"bytes"
@@ -16,18 +16,18 @@ import (
 	"github.com/inercia/MCPShell/pkg/common"
 )
 
-//go:embed runner_firejail_profile.tpl
+//go:embed firejail_profile.tpl
 var firejailProfileTemplate string
 
-// RunnerFirejail implements the Runner interface using firejail on Linux
-type RunnerFirejail struct {
+// Firejail implements the Runner interface using firejail on Linux
+type Firejail struct {
 	logger     *common.Logger
 	profileTpl *template.Template
-	options    RunnerFirejailOptions
+	options    FirejailOptions
 }
 
-// RunnerFirejailOptions is the options for the RunnerFirejail
-type RunnerFirejailOptions struct {
+// FirejailOptions is the options for the Firejail runner
+type FirejailOptions struct {
 	Shell             string   `json:"shell"`
 	AllowNetworking   bool     `json:"allow_networking"`
 	AllowUserFolders  bool     `json:"allow_user_folders"`
@@ -38,22 +38,20 @@ type RunnerFirejailOptions struct {
 	CustomProfile     string   `json:"custom_profile"`
 }
 
-// NewRunnerFirejailOptions creates a new RunnerFirejailOptions from a RunnerOptions
-func NewRunnerFirejailOptions(options RunnerOptions) (RunnerFirejailOptions, error) {
-	var reopts RunnerFirejailOptions
-	opts, err := options.ToJSON()
+// NewFirejailOptions creates a new FirejailOptions from Options
+func NewFirejailOptions(options Options) (FirejailOptions, error) {
+	var opts FirejailOptions
+	jsonStr, err := options.ToJSON()
 	if err != nil {
-		return RunnerFirejailOptions{}, err
+		return FirejailOptions{}, err
 	}
-	err = json.Unmarshal([]byte(opts), &reopts)
-	return reopts, err
+	err = json.Unmarshal([]byte(jsonStr), &opts)
+	return opts, err
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-// NewRunnerFirejail creates a new RunnerFirejail with the provided logger
-// If logger is nil, a default logger is created
-func NewRunnerFirejail(options RunnerOptions, logger *common.Logger) (*RunnerFirejail, error) {
+// NewFirejail creates a new Firejail runner with the provided logger.
+// If logger is nil, a default logger is created.
+func NewFirejail(options Options, logger *common.Logger) (*Firejail, error) {
 	if logger == nil {
 		logger = common.GetLogger()
 	}
@@ -66,24 +64,24 @@ func NewRunnerFirejail(options RunnerOptions, logger *common.Logger) (*RunnerFir
 	}
 
 	// Parse firejail-specific options
-	firejailOpts, err := NewRunnerFirejailOptions(options)
+	firejailOpts, err := NewFirejailOptions(options)
 	if err != nil {
 		logger.Debug("Failed to parse firejail options: %v", err)
 		return nil, fmt.Errorf("failed to parse firejail options: %w", err)
 	}
 
-	return &RunnerFirejail{
+	return &Firejail{
 		logger:     logger,
 		profileTpl: profileTpl,
 		options:    firejailOpts,
 	}, nil
 }
 
-// Run executes a command inside the firejail sandbox and returns the output
-// It implements the Runner interface
+// Run executes a command inside the firejail sandbox and returns the output.
+// It implements the Runner interface.
 //
 // note: tmpfile is ignored for firejail because it's not supported
-func (r *RunnerFirejail) Run(ctx context.Context,
+func (r *Firejail) Run(ctx context.Context,
 	shell string, command string,
 	env []string, params map[string]interface{}, tmpfile bool,
 ) (string, error) {
@@ -245,9 +243,9 @@ func (r *RunnerFirejail) Run(ctx context.Context,
 	return outputStr, nil
 }
 
-// CheckImplicitRequirements checks if the runner meets its implicit requirements
-// Firejail runner requires Linux and the firejail executable
-func (r *RunnerFirejail) CheckImplicitRequirements() error {
+// CheckImplicitRequirements checks if the runner meets its implicit requirements.
+// Firejail runner requires Linux and the firejail executable.
+func (r *Firejail) CheckImplicitRequirements() error {
 	// Firejail is Linux only
 	if runtime.GOOS != "linux" {
 		return fmt.Errorf("firejail runner requires Linux")
