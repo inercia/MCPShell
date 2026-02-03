@@ -28,14 +28,6 @@ var (
 	descriptionFile     []string
 	descriptionOverride bool
 
-	// Agent-specific flags
-	agentModel        string
-	agentSystemPrompt string
-	agentUserPrompt   string
-	agentOpenAIApiKey string
-	agentOpenAIApiURL string
-	agentOnce         bool
-
 	// Application version information (set via SetVersion from main)
 	version   = "dev"
 	commit    = "none"
