@@ -1,0 +1,20 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../don"
+		}
+	],
+	"settings": {
+		"[go]": {
+			"editor.insertSpaces": false,
+			"editor.formatOnSave": true,
+			"editor.codeActionsOnSave": {
+				"source.organizeImports": "never"
+			},
+			"editor.suggest.snippetsPreventQuickSuggestions": false
+		}
+	}
+}
