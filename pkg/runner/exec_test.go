@@ -163,3 +163,33 @@ func TestExec_RunWithEnvExpansion(t *testing.T) {
 		t.Errorf("Environment variable expansion failed: got %q, want %q", output, expected)
 	}
 }
+
+func TestExec_Optimization_SingleExecutable(t *testing.T) {
+	logger, _ := common.NewLogger("test-runner-exec-opt: ", "", common.LogLevelInfo, false)
+	r, err := NewExec(Options{}, logger)
+	if err != nil {
+		t.Fatalf("Failed to create Exec: %v", err)
+	}
+
+	// This command should be a single executable and run directly
+	command := "whoami"
+	output, err := r.Run(context.Background(), "", command, nil, nil, false)
+	if err != nil {
+		t.Errorf("Expected '%s' to run without error, got: %v", command, err)
+	}
+	if len(strings.TrimSpace(output)) == 0 {
+		t.Errorf("Expected output from '%s', got empty string", command)
+	}
+
+	// This command has arguments and should be run via a shell, not directly.
+	// isSingleExecutableCommand should return false.
+	// The command itself should succeed when run through the shell.
+	commandWithArgs := "echo hello"
+	output, err = r.Run(context.Background(), "", commandWithArgs, nil, nil, false)
+	if err != nil {
+		t.Errorf("Expected '%s' to run without error, got: %v", commandWithArgs, err)
+	}
+	if strings.TrimSpace(output) != "hello" {
+		t.Errorf("Expected output from '%s' to be 'hello', got %q", commandWithArgs, output)
+	}
+}

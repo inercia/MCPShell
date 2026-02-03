@@ -2,6 +2,7 @@ package runner
 
 import (
 	"context"
+	"os"
 	"os/exec"
 	"runtime"
 	"strings"
@@ -159,6 +160,103 @@ func TestDocker_Run_EnvironmentVariables(t *testing.T) {
 	}
 }
 
+func TestDocker_Run_Networking(t *testing.T) {
+	// Skip on Windows - Alpine Linux doesn't support Windows containers
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping Docker test on Windows - Alpine Linux image not compatible with Windows containers")
+	}
+
+	// Skip if docker is not available or not running
+	if !checkDockerRunning() {
+		t.Skip("Docker not installed or not running, skipping test")
+	}
+
+	// Check if running in GitHub Actions
+	inGitHubActions := os.Getenv("GITHUB_ACTIONS") == "true"
+	if inGitHubActions {
+		t.Skip("Skipping network test in GitHub Actions environment")
+	}
+
+	logger, _ := common.NewLogger("test-docker: ", "", common.LogLevelInfo, false)
+
+	testCases := []struct {
+		name            string
+		allowNetworking bool
+		expectSuccess   bool
+	}{
+		{
+			name:            "With networking",
+			allowNetworking: true,
+			expectSuccess:   true,
+		},
+		{
+			name:            "Without networking",
+			allowNetworking: false,
+			expectSuccess:   false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			// Create a runner with specified networking
+			r, err := NewDocker(Options{
+				"image":            "alpine:latest",
+				"allow_networking": tc.allowNetworking,
+			}, logger)
+
+			if err != nil {
+				t.Fatalf("Failed to create Docker runner: %v", err)
+			}
+
+			// Try to ping google.com (will fail if networking is disabled)
+			_, err = r.Run(context.Background(), "", "ping -c 1 -W 1 google.com", nil, nil, false)
+
+			if tc.expectSuccess && err != nil {
+				t.Errorf("Expected network ping to succeed but got error: %v", err)
+			}
+
+			if !tc.expectSuccess && err == nil {
+				t.Errorf("Expected network ping to fail but it succeeded")
+			}
+		})
+	}
+}
+
+func TestDocker_Run_PrepareCommand(t *testing.T) {
+	// Skip on Windows - Alpine Linux doesn't support Windows containers
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping Docker test on Windows - Alpine Linux image not compatible with Windows containers")
+	}
+
+	// Skip if docker is not available or not running
+	if !checkDockerRunning() {
+		t.Skip("Docker not installed or not running, skipping test")
+	}
+
+	logger, _ := common.NewLogger("test-docker: ", "", common.LogLevelInfo, false)
+
+	// Create a runner with alpine image and prepare command to install grep
+	r, err := NewDocker(Options{
+		"image":           "alpine:latest",
+		"prepare_command": "apk add --no-cache grep",
+	}, logger)
+
+	if err != nil {
+		t.Fatalf("Failed to create Docker runner: %v", err)
+	}
+
+	// Run grep command that should only work if the prepare_command executed properly
+	output, err := r.Run(context.Background(), "", "grep --version | head -n 1", nil, nil, false)
+	if err != nil {
+		t.Errorf("Failed to run command that requires prepare_command: %v", err)
+	}
+
+	// Check the output contains grep version information
+	if !strings.Contains(output, "grep") {
+		t.Errorf("Expected output to contain grep version information, got: %q", output)
+	}
+}
+
 func TestDocker_Optimization_SingleExecutable(t *testing.T) {
 	// Skip on Windows - Alpine Linux doesn't support Windows containers
 	if runtime.GOOS == "windows" {
@@ -282,8 +380,40 @@ func TestNewDockerOptions(t *testing.T) {
 			if result.Image != tc.expected.Image {
 				t.Errorf("Image: expected %q, got %q", tc.expected.Image, result.Image)
 			}
+			if result.DockerRunOpts != tc.expected.DockerRunOpts {
+				t.Errorf("DockerRunOpts: expected %q, got %q", tc.expected.DockerRunOpts, result.DockerRunOpts)
+			}
 			if result.AllowNetworking != tc.expected.AllowNetworking {
 				t.Errorf("AllowNetworking: expected %v, got %v", tc.expected.AllowNetworking, result.AllowNetworking)
+			}
+			if result.Network != tc.expected.Network {
+				t.Errorf("Network: expected %q, got %q", tc.expected.Network, result.Network)
+			}
+			if result.User != tc.expected.User {
+				t.Errorf("User: expected %q, got %q", tc.expected.User, result.User)
+			}
+			if result.WorkDir != tc.expected.WorkDir {
+				t.Errorf("WorkDir: expected %q, got %q", tc.expected.WorkDir, result.WorkDir)
+			}
+			if result.PrepareCommand != tc.expected.PrepareCommand {
+				t.Errorf("PrepareCommand: expected %q, got %q", tc.expected.PrepareCommand, result.PrepareCommand)
+			}
+
+			// Check slice fields
+			if !compareStringSlices(result.Mounts, tc.expected.Mounts) {
+				t.Errorf("Mounts: expected %v, got %v", tc.expected.Mounts, result.Mounts)
+			}
+			if !compareStringSlices(result.CapAdd, tc.expected.CapAdd) {
+				t.Errorf("CapAdd: expected %v, got %v", tc.expected.CapAdd, result.CapAdd)
+			}
+			if !compareStringSlices(result.CapDrop, tc.expected.CapDrop) {
+				t.Errorf("CapDrop: expected %v, got %v", tc.expected.CapDrop, result.CapDrop)
+			}
+			if !compareStringSlices(result.DNS, tc.expected.DNS) {
+				t.Errorf("DNS: expected %v, got %v", tc.expected.DNS, result.DNS)
+			}
+			if !compareStringSlices(result.DNSSearch, tc.expected.DNSSearch) {
+				t.Errorf("DNSSearch: expected %v, got %v", tc.expected.DNSSearch, result.DNSSearch)
 			}
 		})
 	}
