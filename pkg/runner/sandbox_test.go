@@ -2,6 +2,7 @@ package runner
 
 import (
 	"context"
+	"os"
 	"reflect"
 	"runtime"
 	"strings"
@@ -84,6 +85,20 @@ func TestSandboxExec_Run(t *testing.T) {
 		t.Skip("skipping test in short mode")
 	}
 
+	// Set environment variables for the test
+	if err := os.Setenv("ALLOWED_FROM_ENV", "/tmp"); err != nil {
+		t.Fatalf("Failed to set environment variable: %v", err)
+	}
+	if err := os.Setenv("USR_DIR", "/usr"); err != nil {
+		t.Fatalf("Failed to set environment variable: %v", err)
+	}
+
+	// Ensure cleanup
+	defer func() {
+		_ = os.Unsetenv("ALLOWED_FROM_ENV")
+		_ = os.Unsetenv("USR_DIR")
+	}()
+
 	// Create a logger for the test
 	logger, _ := common.NewLogger("test-runner-sandbox: ", "", common.LogLevelInfo, false)
 	ctx := context.Background()
@@ -126,6 +141,67 @@ func TestSandboxExec_Run(t *testing.T) {
 			},
 			shouldSucceed: true,
 			expectedOut:   "Restricted",
+		},
+		{
+			name:    "read /tmp with folder restrictions",
+			command: "ls -la /tmp | grep -q . && echo 'success'",
+			options: Options{
+				"allow_networking":   false,
+				"allow_user_folders": false,
+			},
+			shouldSucceed: true,
+			expectedOut:   "success",
+		},
+		{
+			name:    "custom profile allowing only /tmp",
+			command: "ls -la /tmp | grep -q . && echo 'success'",
+			options: Options{
+				"custom_profile": `(version 1)
+(allow default)
+(deny file-read* (subpath "/Users"))
+(allow file-read* (regex "^/tmp"))`,
+			},
+			shouldSucceed: true,
+			expectedOut:   "success",
+		},
+		{
+			name:    "read from allowed folder using env variable",
+			command: "ls -la /tmp > /dev/null && echo 'can read /tmp'",
+			options: Options{
+				"allow_networking":   false,
+				"allow_user_folders": false,
+				"allow_read_folders": []string{"{{ env ALLOWED_FROM_ENV }}"},
+				"custom_profile":     "",
+			},
+			shouldSucceed: true,
+			expectedOut:   "can read /tmp",
+		},
+		{
+			name:    "template variables in allow_read_folders",
+			command: "ls -la /var > /dev/null && echo 'can read templated folder'",
+			options: Options{
+				"allow_networking":   false,
+				"allow_user_folders": false,
+				"allow_read_folders": []string{"{{.test_folder}}"},
+				"custom_profile":     "",
+			},
+			params: map[string]interface{}{
+				"test_folder": "/var",
+			},
+			shouldSucceed: true,
+			expectedOut:   "can read templated folder",
+		},
+		{
+			name:    "complex env variable template in allow_read_folders",
+			command: "ls -la /usr/bin > /dev/null && echo 'can read /usr/bin'",
+			options: Options{
+				"allow_networking":   false,
+				"allow_user_folders": false,
+				"allow_read_folders": []string{"{{ env USR_DIR }}/bin"},
+				"custom_profile":     "",
+			},
+			shouldSucceed: true,
+			expectedOut:   "can read /usr/bin",
 		},
 	}
 
