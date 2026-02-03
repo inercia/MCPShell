@@ -1,7 +1,7 @@
 mcp:
   description: "Docker runner test configuration"
   run:
-    shell: bash
+    shell: sh
   tools:
     - name: "docker_hello"
       description: "Simple hello world command running in Alpine container"
