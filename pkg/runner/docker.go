@@ -147,9 +147,9 @@ func (o *DockerOptions) GetBaseDockerCommand(env []string) []string {
 		parts = append(parts, fmt.Sprintf("-v %s", mount))
 	}
 
-	// Add environment variables (quoted to handle values with spaces)
+	// Add environment variables (shell-quoted to handle values with spaces)
 	for _, e := range env {
-		parts = append(parts, fmt.Sprintf("-e %q", e))
+		parts = append(parts, fmt.Sprintf("-e %s", shellQuote(e)))
 	}
 
 	return parts
