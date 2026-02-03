@@ -215,11 +215,11 @@ func createMergedConfigFile(yamlFiles []string, logger *common.Logger) (string, 
 	return tmpFilePath, cleanup, nil
 }
 
-// ResolveMultipleConfigPath tries to resolve multiple tools file paths.
+// ResolveMultipleConfigPaths tries to resolve multiple tools file paths.
 // It handles each path individually (URLs, directories, local files) and then merges
 // all configurations into a single temporary file.
 // Returns the local path to the merged configuration file and a cleanup function.
-func ResolveMultipleConfigPath(configs []string, logger *common.Logger) (string, func(), error) {
+func ResolveMultipleConfigPaths(configs []string, logger *common.Logger) (string, func(), error) {
 	// Default no-op cleanup function
 	noopCleanup := func() {}
 
