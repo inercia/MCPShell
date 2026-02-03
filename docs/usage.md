@@ -1,6 +1,8 @@
 # MCPShell Command-Line Usage
 
-MCPShell is a command-line interface for the MCP (Model Context Protocol) platform that enables AI systems to securely execute commands. This document describes the available commands and their arguments.
+MCPShell is a command-line interface for the MCP (Model Context Protocol) platform that
+enables AI systems to securely execute commands. This document describes the available
+commands and their arguments.
 
 ## Global Options
 
@@ -30,13 +32,16 @@ This is the list of argument that are common to all the commands:
 - `--log-level`: Log level: none, error, info, debug (default: "info")
 - `--description-override`: override the description found in the config file.
 - `--description`, `-d`: Server description (optional, can be specified multiple times).
-  If an existing description is specified in the config file (and `--description-override` is not passed)
-  it will append the description to the existing one. If it is specified multiple times, the
-  resulting description with be the join of all of them
-- `--description-file`: Read the description from files (optional, can be specified multiple times).\
-  Shell globbing is supported (e.g., `--description-file *.md`). URLs are also supported (e.g.,
-  `--description-file https://example.com/description.txt`). It follows the same behaviour of
-  `--description`, where the final description is the result of the concatenation of all of them
+  If an existing description is specified in the config file (and
+  `--description-override` is not passed) it will append the description to the existing
+  one. If it is specified multiple times, the resulting description with be the join of
+  all of them
+- `--description-file`: Read the description from files (optional, can be specified
+  multiple times).\
+  Shell globbing is supported (e.g., `--description-file *.md`). URLs are also supported
+  (e.g., `--description-file https://example.com/description.txt`). It follows the same
+  behaviour of `--description`, where the final description is the result of the
+  concatenation of all of them
 
 ### Tools Directory
 
@@ -45,8 +50,8 @@ MCPShell looks for tools files in a dedicated directory:
 - Default: `~/.mcpshell/tools/`
 - Override with: `MCPSHELL_TOOLS_DIR` environment variable
 
-When using relative paths with `--tools`, the file is searched in this directory.
-If no extension is provided, `.yaml` is automatically appended.
+When using relative paths with `--tools`, the file is searched in this directory. If no
+extension is provided, `.yaml` is automatically appended.
 
 Examples:
 
@@ -54,7 +59,7 @@ Examples:
 # Using a file in the tools directory (adds .yaml automatically)
 mcpshell mcp --tools mytools
 
-# Using a file in the tools directory with extension  
+# Using a file in the tools directory with extension
 mcpshell mcp --tools mytools.yaml
 
 # Using an absolute path
@@ -62,8 +67,8 @@ mcpshell mcp --tools /path/to/your/tools.yaml
 ```
 
 For example, imagine you want to use the [kubectl](../examples/kubectl-ro.yaml) toolkit,
-but you want to add some additional instructions specific to your infrastructure,
-you could do:
+but you want to add some additional instructions specific to your infrastructure, you
+could do:
 
 ```console
 mcpshell mcp \
@@ -72,8 +77,8 @@ mcpshell mcp \
     --description "Envoy is running in namespace 'envoy'"
 ```
 
-So multiple descriptions can be combined in the order they are provided in the command line,
-like:
+So multiple descriptions can be combined in the order they are provided in the command
+line, like:
 
 ```console
 # Combine multiple descriptions from different sources
@@ -99,13 +104,16 @@ mcpshell mcp [flags]
 
 **Description**:
 
-Runs an MCP server that communicates using the Model Context Protocol and exposes the tools defined in a MCP configuration file. The server loads tool definitions from a YAML configuration file and makes them available to AI applications via the MCP protocol.
+Runs an MCP server that communicates using the Model Context Protocol and exposes the
+tools defined in a MCP configuration file. The server loads tool definitions from a YAML
+configuration file and makes them available to AI applications via the MCP protocol.
 
 **HTTP/SSE Mode**:
 
 - `--http`: Enable HTTP server mode (serve MCP over HTTP/SSE instead of stdio)
 - `--port`: Port for HTTP server (default: 8080, only used with --http)
-- `--daemon`: Run in daemon mode (background process, ignores SIGHUP, only works with --http)
+- `--daemon`: Run in daemon mode (background process, ignores SIGHUP, only works with
+  --http)
 
 **Example**:
 
@@ -123,8 +131,9 @@ The `exe` command executes a specific MCP tool directly.
 mcpshell exe [flags] TOOL_NAME [PARAM1=VALUE1 PARAM2=VALUE2 ...]
 ```
 
-**Description**:
-Directly executes a MCP tool with the specified parameters. This command is useful for debugging tool execution, as it follows the whole process of constraint evaluation, tool selection, and tool execution.
+**Description**: Directly executes a MCP tool with the specified parameters. This
+command is useful for debugging tool execution, as it follows the whole process of
+constraint evaluation, tool selection, and tool execution.
 
 **Example**:
 
@@ -144,7 +153,9 @@ mcpshell validate [flags]
 
 **Description**:
 
-Validates an MCP configuration file without starting the server. It checks for errors including file format and schema validation, tool parameter definitions, constraint expression syntax, and command template syntax.
+Validates an MCP configuration file without starting the server. It checks for errors
+including file format and schema validation, tool parameter definitions, constraint
+expression syntax, and command template syntax.
 
 **Example**:
 
@@ -162,19 +173,26 @@ See [this document](usage-agent.md) for more details.
 
 MCPShell can be integrated with various IDEs and tools:
 
-- [Agent Usage Guide](usage-agent.md): Detailed guide for using MCPShell's agent functionality
-- [VSCode Integration](usage-vscode.md): Guide for integrating MCPShell with Visual Studio Code
-- [Cursor Integration](usage-cursor.md): Guide for integrating MCPShell with Cursor editor
-- [Codex CLI Integration](usage-codex-cli.md): Guide for integrating MCPShell with the Codex CLI
-- [Claud Desktop Integration](usage-claude-desktop.md): Guide for integrating MCPShell with Claude Desktop
+- [Agent Usage Guide](usage-agent.md): Detailed guide for using MCPShell's agent
+  functionality
+- [VSCode Integration](usage-vscode.md): Guide for integrating MCPShell with Visual
+  Studio Code
+- [Cursor Integration](usage-cursor.md): Guide for integrating MCPShell with Cursor
+  editor
+- [Codex CLI Integration](usage-codex-cli.md): Guide for integrating MCPShell with the
+  Codex CLI
+- [Claude Desktop Integration](usage-claude-desktop.md): Guide for integrating MCPShell
+  with Claude Desktop
 
 ## Configuration
 
-For information about configuring MCPShell, including defining tools, parameters, and constraints, see:
+For information about configuring MCPShell, including defining tools, parameters, and
+constraints, see:
 
 - [Configuration Guide](config.md): General configuration information
 - [Runner Configuration](config-runners.md): Configuration for command runners
-- [Container Deployment](mcp-containers.md): Building and deploying MCPShell in containers and Kubernetes
+- [Container Deployment](usage-containers.md): Building and deploying MCPShell in
+  containers and Kubernetes
 
 ## Troubleshooting
 

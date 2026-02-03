@@ -54,10 +54,13 @@ These checks help maintain code quality and prevent regressions as the project e
 
 ## Releases
 
-This project uses [GoReleaser](https://goreleaser.com/) and GitHub Actions to automatically build and release binaries for multiple platforms. When a tag is pushed, the workflow:
+This project uses [GoReleaser](https://goreleaser.com/) and GitHub Actions to
+automatically build and release binaries for multiple platforms. When a tag is pushed,
+the workflow:
 
 1. Runs all tests
-1. Builds binaries for multiple platforms (Linux, macOS, Windows) and architectures (amd64, arm64)
+1. Builds binaries for multiple platforms (Linux, macOS, Windows) and architectures
+   (amd64, arm64)
 1. Creates archives with documentation and examples
 1. Generates checksums
 1. Creates a GitHub release with all artifacts
@@ -75,7 +78,8 @@ make release
 git push origin main v1.2.3
 ```
 
-The release will appear on the GitHub Releases page with binaries for each supported platform.
+The release will appear on the GitHub Releases page with binaries for each supported
+platform.
 
 ### Testing Releases Locally
 
@@ -89,7 +93,8 @@ make release-test
 make release-snapshot
 ```
 
-For detailed information about the release process, see the [Release Process Guide](release-process.md).
+For detailed information about the release process, see the
+[Release Process Guide](release-process.md).
 
 ## Make Targets
 
