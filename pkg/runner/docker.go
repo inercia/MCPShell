@@ -407,11 +407,11 @@ func (r *Docker) createScriptFile(shell string, cmd string, env []string) (strin
 	var content strings.Builder
 	content.WriteString("#!/bin/sh\n\n")
 
-	// Add environment variables
+	// Add environment variables (shell-quoted to handle values with spaces)
 	for _, e := range env {
 		parts := strings.SplitN(e, "=", 2)
 		if len(parts) == 2 {
-			fmt.Fprintf(&content, "export %s=%s\n", parts[0], parts[1])
+			fmt.Fprintf(&content, "export %s=%s\n", parts[0], shellQuote(parts[1]))
 		}
 	}
 
