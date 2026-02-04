@@ -8,7 +8,8 @@ import (
 	"time"
 
 	"github.com/inercia/MCPShell/pkg/common"
-	"github.com/inercia/MCPShell/pkg/runner"
+	runnercommon "github.com/inercia/go-restricted-runner/pkg/common"
+	"github.com/inercia/go-restricted-runner/pkg/runner"
 )
 
 // executeToolCommand handles the core logic of executing a command with the given parameters.
@@ -153,7 +154,15 @@ func (h *CommandHandler) executeToolCommand(ctx context.Context, params map[stri
 
 	// Create the appropriate runner with options
 	h.logger.Debug("Creating runner of type %s and checking implicit requirements", runnerType)
-	r, err := runner.New(runnerType, runnerOptions, h.logger)
+
+	// Create a runner-compatible logger
+	runnerLogger, err := runnercommon.NewLogger("", "", runnercommon.LogLevel(h.logger.Level()), false)
+	if err != nil {
+		h.logger.Error("Error creating runner logger: %v", err)
+		return "", nil, fmt.Errorf("error creating runner logger: %v", err)
+	}
+
+	r, err := runner.New(runnerType, runnerOptions, runnerLogger)
 	if err != nil {
 		h.logger.Error("Error creating runner: %v", err)
 		return "", nil, fmt.Errorf("error creating runner: %v", err)

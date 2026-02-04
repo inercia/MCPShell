@@ -16,7 +16,7 @@ import (
 
 	"github.com/inercia/MCPShell/pkg/common"
 	"github.com/inercia/MCPShell/pkg/config"
-	"github.com/inercia/MCPShell/pkg/runner"
+	"github.com/inercia/go-restricted-runner/pkg/runner"
 )
 
 // CommandHandler encapsulates the configuration and behavior needed to handle tool commands.
