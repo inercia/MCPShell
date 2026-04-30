@@ -6,7 +6,7 @@ require (
 	github.com/Masterminds/sprig/v3 v3.3.0
 	github.com/google/cel-go v0.26.1
 	github.com/inercia/go-restricted-runner v0.0.0-20260204084804-4beca5b00656
-	github.com/mark3labs/mcp-go v0.45.0
+	github.com/mark3labs/mcp-go v0.50.0
 	github.com/spf13/cobra v1.10.2
 	golang.org/x/sys v0.40.0
 	gopkg.in/yaml.v3 v3.0.1
@@ -20,6 +20,7 @@ require (
 	github.com/antlr4-go/antlr/v4 v4.13.1 // indirect
 	github.com/bahlo/generic-list-go v0.2.0 // indirect
 	github.com/buger/jsonparser v1.1.1 // indirect
+	github.com/google/jsonschema-go v0.4.2 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/huandu/xstrings v1.5.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
@@ -28,6 +29,7 @@ require (
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
+	github.com/santhosh-tekuri/jsonschema/v6 v6.0.2 // indirect
 	github.com/shopspring/decimal v1.4.0 // indirect
 	github.com/spf13/cast v1.10.0 // indirect
 	github.com/spf13/pflag v1.0.10 // indirect
@@ -37,6 +39,7 @@ require (
 	github.com/yosida95/uritemplate/v3 v3.0.2 // indirect
 	golang.org/x/crypto v0.46.0 // indirect
 	golang.org/x/exp v0.0.0-20251219203646-944ab1f22d93 // indirect
+	golang.org/x/text v0.32.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20251222181119-0a764e51fe1b // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20251222181119-0a764e51fe1b // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
