@@ -348,6 +348,40 @@ func TestConstraints(t *testing.T) {
 			wantEvalResult: true,
 			wantEvalErr:    false,
 		},
+		// Cross-type numeric comparisons: double parameter compared with integer literals
+		{
+			name:        "Cross-type numeric comparison - pass",
+			constraints: []string{"max_depth >= 1 && max_depth <= 3"},
+			paramTypes: map[string]ParamConfig{
+				"max_depth": {Type: "number", Description: "Max depth"},
+			},
+			args:           map[string]interface{}{"max_depth": 2.0},
+			wantCompileErr: false,
+			wantEvalResult: true,
+			wantEvalErr:    false,
+		},
+		{
+			name:        "Cross-type numeric comparison - fail below min",
+			constraints: []string{"max_depth >= 1 && max_depth <= 3"},
+			paramTypes: map[string]ParamConfig{
+				"max_depth": {Type: "number", Description: "Max depth"},
+			},
+			args:           map[string]interface{}{"max_depth": 0.0},
+			wantCompileErr: false,
+			wantEvalResult: false,
+			wantEvalErr:    false,
+		},
+		{
+			name:        "Cross-type numeric comparison - fail above max",
+			constraints: []string{"max_depth >= 1 && max_depth <= 3"},
+			paramTypes: map[string]ParamConfig{
+				"max_depth": {Type: "number", Description: "Max depth"},
+			},
+			args:           map[string]interface{}{"max_depth": 5.0},
+			wantCompileErr: false,
+			wantEvalResult: false,
+			wantEvalErr:    false,
+		},
 	}
 
 	for _, tt := range tests {

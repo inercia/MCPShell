@@ -48,6 +48,10 @@ func NewCompiledConstraints(constraints []string, paramTypes map[string]ParamCon
 		}
 	}
 
+	// Enable cross-type numeric comparisons so that double-typed parameters
+	// can be compared with integer literals (e.g. "max_depth >= 1 && max_depth <= 3")
+	envOpts = append(envOpts, cel.CrossTypeNumericComparisons(true))
+
 	env, err := cel.NewEnv(envOpts...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create CEL environment: %w", err)

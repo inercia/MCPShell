@@ -51,7 +51,7 @@ space problems in your hard disk.
            - "directory.startsWith('/')"  # Must be absolute path
            - "!directory.contains('..')"  # Prevent directory traversal
            - "max_depth >= 1 && max_depth <= 3"  # Limit recursion depth
-           - "directory.matches('^[\\w\\s./\\-_]+$')"  # Only allow safe path characters, prevent command injection
+           - 'directory.matches("^[\\w\\s./\\-_]+$")'  # Only allow safe path characters, prevent command injection
          run:
            command: |
              du -h --max-depth={{ .max_depth }} {{ .directory }} | sort -hr | head -20
