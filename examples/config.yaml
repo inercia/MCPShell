@@ -33,14 +33,15 @@ mcp:
       constraints:
         - "location.size() > 0"                                 # Location must not be empty
         - "location.size() <= 50"                               # Limit location length
+        - "!location.matches(\"[;&|`]\")"                       # Prevent shell injection
         - "format == '' || format == 'simple' || format == 'detailed'"  # Restrict format values
       run:
         timeout: "15s"
         command: |
           if [ "{{ .format }}" = "detailed" ]; then
-            curl -s --max-time 5 'https://wttr.in/{{ .location }}?format=v2'
+            curl -s --max-time 5 "https://wttr.in/"{{ .location | shellQuote }}"?format=v2"
           else
-            curl -s --max-time 5 'https://wttr.in/{{ .location }}?format=3'
+            curl -s --max-time 5 "https://wttr.in/"{{ .location | shellQuote }}"?format=3"
           fi
       output:
         prefix: |
