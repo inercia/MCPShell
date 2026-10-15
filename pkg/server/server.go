@@ -393,7 +393,7 @@ func (s *Server) handleMCPHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s.logger.Info("Request body: %s", string(body))
+	s.logger.Debug("Request body: %s", string(body))
 
 	// Parse the JSON-RPC request
 	var req map[string]interface{}
@@ -444,7 +444,7 @@ func (s *Server) handleMCPHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		s.logger.Info("Response: %s", string(respBytes))
+		s.logger.Debug("Response: %s", string(respBytes))
 		if _, err := w.Write(respBytes); err != nil {
 			s.logger.Error("Failed to write response: %v", err)
 		}
@@ -470,7 +470,7 @@ func (s *Server) handleMCPHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		respBytes = b
 	}
-	s.logger.Info("Response: %s", string(respBytes))
+	s.logger.Debug("Response: %s", string(respBytes))
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	if _, err := w.Write(respBytes); err != nil {
